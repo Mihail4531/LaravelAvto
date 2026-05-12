@@ -5,6 +5,8 @@ namespace App\Filament\Resources\Orders;
 use App\Filament\Resources\Orders\Pages\CreateOrder;
 use App\Filament\Resources\Orders\Pages\EditOrder;
 use App\Filament\Resources\Orders\Pages\ListOrders;
+use App\Filament\Resources\Orders\RelationManagers\PartsRelationManager;
+use App\Filament\Resources\Orders\RelationManagers\ServicesRelationManager;
 use App\Filament\Resources\Orders\Schemas\OrderForm;
 use App\Filament\Resources\Orders\Tables\OrdersTable;
 use App\Models\Order;
@@ -20,26 +22,35 @@ class OrderResource extends Resource
 {
     protected static ?string $model = Order::class;
 
-    // Иконка в меню (строка для v5)
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-document-text';
 
-    // Название в меню
     protected static ?string $navigationLabel = 'Заказы';
 
-    // Единственное число
     protected static ?string $modelLabel = 'заказ';
 
-    // Множественное число
     protected static ?string $pluralModelLabel = 'Заказы';
 
-    // Группа в боковом меню
     protected static string|UnitEnum|null $navigationGroup = 'Клиенты и заказы';
 
-    // Порядок сортировки внутри группы (клиенты – 1, заявки – 2, заказы – 3)
-   protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 4;
 
-    // Поле для отображения заголовка записи (в хлебных крошках)
     protected static ?string $recordTitleAttribute = 'id';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = Order::whereIn('status', ['new', 'in_progress'])->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        $overdue = Order::whereIn('status', ['new', 'in_progress'])
+            ->whereNotNull('planned_finish')
+            ->where('planned_finish', '<', now())
+            ->count();
+
+        return $overdue > 0 ? 'danger' : 'primary';
+    }
 
     public static function form(Schema $schema): Schema
     {
@@ -53,7 +64,10 @@ class OrderResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            ServicesRelationManager::class,
+            PartsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array
@@ -65,13 +79,11 @@ class OrderResource extends Resource
         ];
     }
 
-    // Показывать в том числе мягко удалённые записи (для вкладок)
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->withTrashed();
     }
 
-    // Для корректной загрузки удалённой записи при редактировании по прямому URL
     public static function getRecordRouteBindingEloquentQuery(): Builder
     {
         return parent::getRecordRouteBindingEloquentQuery()
