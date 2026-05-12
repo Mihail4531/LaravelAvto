@@ -18,26 +18,30 @@ class AppointmentResource extends Resource
 {
     protected static ?string $model = Appointment::class;
 
-    // Иконка в меню (строка, без Heroicon::)
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
 
-    // Название в меню
     protected static ?string $navigationLabel = 'Заявки';
 
-    // Единственное число
     protected static ?string $modelLabel = 'заявку';
 
-    // Множественное число
     protected static ?string $pluralModelLabel = 'Заявки';
 
-    // Группа в боковом меню
     protected static string|UnitEnum|null $navigationGroup = 'Клиенты и заказы';
 
-    // Порядок сортировки внутри группы (клиенты – 1, заявки – 2, заказы – 3)
     protected static ?int $navigationSort = 2;
 
-    // Поле, используемое для отображения заголовка записи (например, в хлебных крошках)
     protected static ?string $recordTitleAttribute = 'client_name';
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = Appointment::where('status', 'new')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
 
     public static function form(Schema $schema): Schema
     {
