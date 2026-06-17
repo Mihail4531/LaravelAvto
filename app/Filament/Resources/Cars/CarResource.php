@@ -7,6 +7,7 @@ use App\Filament\Resources\Cars\Pages\EditCar;
 use App\Filament\Resources\Cars\Pages\ListCars;
 use App\Filament\Resources\Cars\Schemas\CarForm;
 use App\Filament\Resources\Cars\Tables\CarsTable;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Car;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,13 +19,15 @@ use UnitEnum;
 
 class CarResource extends Resource
 {
+    use ResourcePermissions;
+
     protected static ?string $model = Car::class;
 
     // Иконка
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-truck';
 
     // Название в меню
-    protected static ?string $navigationLabel = 'Автомобили клиентов';
+    protected static ?string $navigationLabel = 'Автомобили';
 
     // Единственное число
     protected static ?string $modelLabel = 'автомобиль';
@@ -33,10 +36,10 @@ class CarResource extends Resource
     protected static ?string $pluralModelLabel = 'Автомобили клиентов';
 
     // Группа в меню
-    protected static string|UnitEnum|null $navigationGroup = 'Клиенты и заказы';
+    protected static string|UnitEnum|null $navigationGroup = 'Работа';
 
-    // Сортировка в группе (второй после клиентов)
-    protected static ?int $navigationSort = 2;
+    // Сортировка в группе (после клиентов)
+    protected static ?int $navigationSort = 5;
 
     // Поле для заголовка записи (используется в селектах, хлебных крошках)
     protected static ?string $recordTitleAttribute = 'vin';

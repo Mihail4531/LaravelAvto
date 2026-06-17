@@ -6,6 +6,579 @@
 @source '../**/*.js';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Inter Tight', 'Inter', ui-sans-serif, system-ui, sans-serif;
+    --font-display: 'Sora', 'Inter Tight', ui-sans-serif, system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    /* ── Базовые тёмные слои (холодная сталь) ─────────────────────── */
+    --color-base-50:   #0B0D10;
+    --color-base-100:  #0F1217;
+    --color-base-200:  #161A20;
+    --color-base-300:  #20262E;
+
+    /* ── Шкала «сталь» (СВЕТЛАЯ ТЕМА): семантика классов прежняя, но
+       значения перевёрнуты — фон светлый, текст тёмный, бордеры светлые.
+       ink-900/800 = поверхности, ink-100/200 = текст, ink-700/600 = бордеры. */
+    --color-ink-50:    #0A0C0F;   /* самый сильный текст */
+    --color-ink-100:   #14181E;   /* заголовки — тёмный */
+    --color-ink-200:   #2A323B;   /* основной текст */
+    --color-ink-300:   #434B55;   /* вторичный текст */
+    --color-ink-400:   #5C646E;   /* приглушённый текст — AA на светлом */
+    --color-ink-500:   #6E7681;   /* мелкие подписи / плейсхолдеры — AA */
+    --color-ink-600:   #CDD3DC;   /* сильный бордер (светлый) */
+    --color-ink-700:   #E2E6EC;   /* бордер (светлый hairline) */
+    --color-ink-800:   #FFFFFF;   /* фон карточки — белый */
+    --color-ink-900:   #F4F6F9;   /* основной фон — светло-стальной */
+    --color-ink-950:   #EBEEF3;   /* глубже фона (трек скролла/датчиков) */
+
+    /* ── Акцент «синий логотипа» (Mobil-blue #0066B3) ─────────────── */
+    --color-primary-50:  #E7F1FA;
+    --color-primary-100: #C4DFF1;
+    --color-primary-200: #8FC0E4;
+    --color-primary-300: #4F9CD2;
+    --color-primary-400: #1E7BC0;
+    --color-primary-500: #0066B3;
+    --color-primary-600: #00538F;
+    --color-primary-700: #064675;
+    --color-primary-800: #0A3759;
+    --color-primary-900: #0A2B45;
+
+    /* ── Акцент «красный логотипа» (#ED1B2F) — точечно ────────────── */
+    --color-accent-50:  #FDECEE;
+    --color-accent-100: #FAD2D6;
+    --color-accent-200: #F4A6AE;
+    --color-accent-300: #EE6F7C;
+    --color-accent-400: #F0394A;
+    --color-accent-500: #ED1B2F;
+    --color-accent-600: #C71426;
+    --color-accent-700: #9E0F1E;
+
+    /* ── Хром / сталь (металлические акценты) ─────────────────────── */
+    --color-chrome-100: #EDEFF3;
+    --color-chrome-200: #C9CFD8;
+    --color-chrome-300: #9AA2AD;
+    --color-chrome-400: #6B7480;
+
+    /* ── Статусы ──────────────────────────────────────────────────── */
+    --color-success-100: #C9F7E5;
+    --color-success-500: #10B981;
+    --color-success-700: #047857;
+
+    --radius-2xl: 1rem;
+    --radius-3xl: 1.5rem;
+}
+
+html { scroll-behavior: smooth; }
+
+/* Защита от горизонтальной прокрутки на мобильных: `clip` (в отличие от
+   `hidden`) не создаёт скролл-контейнер и не ломает fixed-шапку / sticky. */
+html, body { overflow-x: clip; max-width: 100%; }
+
+body {
+    background: var(--color-ink-900);
+    color: var(--color-ink-200);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01", "cv11";
+}
+
+/* Тонкая «техническая» сетка-подложка на всём фоне */
+body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(rgba(13,30,55,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(13,30,55,0.04) 1px, transparent 1px);
+    background-size: 48px 48px;
+}
+
+/* ── Поля ввода ───────────────────────────────────────────────────── */
+.public-scope input,
+.public-scope select,
+.public-scope textarea {
+    font-family: inherit;
+    color: var(--color-ink-100);
+    -webkit-appearance: none;
+}
+.public-scope input::placeholder,
+.public-scope textarea::placeholder { color: var(--color-ink-500); }
+
+.public-scope select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8' fill='none'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%236E7884' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+}
+
+/* ── Скроллбар ────────────────────────────────────────────────────── */
+.public-scope ::-webkit-scrollbar { width: 9px; height: 9px; }
+.public-scope ::-webkit-scrollbar-track { background: var(--color-ink-950); }
+.public-scope ::-webkit-scrollbar-thumb { background: var(--color-ink-600); border-radius: 0; }
+.public-scope ::-webkit-scrollbar-thumb:hover { background: var(--color-primary-600); }
+
+/* Горизонтальные ленты (табы категорий на мобильном) — скрытый скроллбар.
+   Правило неслоёное и со специфичностью выше базового, чтобы перебить его. */
+.hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.public-scope .hide-scrollbar::-webkit-scrollbar { display: none; }
+
+.public-scope *:focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+}
+
+/* Поле телефона: фокус-индикатор даёт синяя нижняя граница строки
+   (focus-within), которая идёт под всей строкой, включая префикс «+7».
+   Подавляем стандартный box-outline у самого input, иначе он обводит
+   только поле ввода и не захватывает «+7». */
+.public-scope .tel-input:focus-visible {
+    outline: none;
+    outline-offset: 0;
+}
+
+/* ── Яндекс Карты — балун ─────────────────────────────────────────── */
+.ya-balloon { font-family: 'Inter Tight', sans-serif; min-width: 240px; padding: 6px; }
+.ya-balloon__title { font-weight: 700; font-size: 14px; color: var(--color-ink-900); margin-bottom: 4px; line-height: 1.3; }
+.ya-balloon__address { font-size: 12px; color: var(--color-ink-500); line-height: 1.5; margin-bottom: 6px; }
+.ya-balloon__phone { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--color-primary-700); }
+
+/* ════════════════════════════════════════════════════════════════════
+   ЛОАДЕР — брендовый «прогрев двигателя»
+═══════════════════════════════════════════════════════════════════════ */
+#app-loader {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2rem;
+    background: radial-gradient(ellipse at center, #FFFFFF 0%, #E9EDF2 80%);
+    transition: opacity .7s cubic-bezier(.7,0,.3,1), visibility .7s;
+}
+#app-loader.is-hidden { opacity: 0; visibility: hidden; }
+
+.loader-badge {
+    width: 76px; height: 76px;
+    border-radius: 18px;
+    background: linear-gradient(145deg, var(--color-primary-400), var(--color-primary-700));
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'Sora','Inter Tight',sans-serif; font-weight: 800; font-size: 38px;
+    color: #FFFFFF;
+    box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 50px -12px rgba(0,102,179,.5);
+    animation: loaderPulse 1.6s ease-in-out infinite;
+}
+@keyframes loaderPulse {
+    0%,100% { transform: scale(1); box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 20px 50px -12px rgba(0,102,179,.45); }
+    50%     { transform: scale(1.05); box-shadow: 0 0 0 1px rgba(255,255,255,.15), 0 26px 60px -10px rgba(0,102,179,.7); }
+}
+
+/* Логотип в прелоадере — наш фирменный (как в шапке), мягкая пульсация. */
+.loader-logo {
+    height: 46px; width: auto; display: block;
+    animation: logoPulse 1.7s cubic-bezier(.4,0,.6,1) infinite;
+}
+@keyframes logoPulse {
+    0%,100% { transform: scale(1);    opacity: .92; }
+    50%     { transform: scale(1.045); opacity: 1; }
+}
+
+.loader-brand {
+    font-family: 'Sora','Inter Tight',sans-serif;
+    font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+    font-size: 13px; color: var(--color-ink-300);
+}
+
+.loader-track {
+    width: min(320px, 70vw); height: 3px;
+    background: var(--color-ink-700);
+    overflow: hidden; position: relative;
+}
+.loader-fill {
+    position: absolute; inset: 0 100% 0 0;
+    background: linear-gradient(90deg, var(--color-primary-600), var(--color-primary-300));
+    box-shadow: 0 0 14px rgba(0,102,179,.7);
+    transition: right .15s linear;
+}
+.loader-counter {
+    font-family: 'JetBrains Mono', monospace;
+    font-variant-numeric: tabular-nums;
+    font-size: 12px; letter-spacing: .1em;
+    color: var(--color-primary-400);
+}
+
+@layer utilities {
+    /* ── Появление при загрузке (кинематографический вход) ────────── */
+    @keyframes snapIn {
+        0%   { opacity: 0; transform: translateY(40px) scale(.98); filter: blur(6px); }
+        60%  { filter: blur(0); }
+        100% { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .animate-snap { animation: snapIn .85s cubic-bezier(.16,1,.3,1) backwards; }
+
+    @keyframes slideLeft {
+        0% { opacity: 0; transform: translateX(-48px); }
+        100% { opacity: 1; transform: translateX(0); }
+    }
+    .animate-slide-left { animation: slideLeft .8s cubic-bezier(.16,1,.3,1) backwards; }
+
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .animate-fade-in { animation: fadeIn .8s ease-out backwards; }
+
+    /* ── Hero: оркестровка появления карточки записи ──────────────────
+       Панель мягко проявляется (scale+fade, без translateY — чтобы не
+       складываться с подъёмом внутренних строк), затем содержимое
+       всплывает по очереди (--i), а галочки прорисовываются штрихом. ── */
+    @keyframes heroPanel { from { opacity: 0; transform: scale(.97); } to { opacity: 1; transform: none; } }
+    .hero-panel { animation: heroPanel .7s cubic-bezier(.16,1,.3,1) backwards; animation-delay: .2s; }
+
+    @keyframes heroRise { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+    .hero-rise { animation: heroRise .55s cubic-bezier(.16,1,.3,1) backwards; animation-delay: calc(.4s + var(--i, 0) * .09s); }
+
+    @keyframes heroCheckDraw { to { stroke-dashoffset: 0; } }
+    .hero-check {
+        stroke-dasharray: 26; stroke-dashoffset: 26;
+        animation: heroCheckDraw .8s cubic-bezier(.45,.05,.2,1) both;
+        animation-delay: calc(.7s + var(--i, 0) * .16s);
+    }
+
+    /* ── Датчики статистики: дугу заполняет JS-одометр (initOdometer)
+       КАДР-В-КАДР вместе со счётом числа — единый прогресс и easing,
+       поэтому стрелка/дуга и цифра финишируют одновременно. Без JS дуга
+       остаётся на стартовой длине (var(--len)); reduced-motion — ниже. ── */
+    .stat-arc {
+        stroke-dashoffset: var(--len, 245);
+        will-change: stroke-dashoffset;
+    }
+    /* Стрелка спидометра. Угол --ang ведёт JS (старт 225° = «пусто»),
+       поворот вокруг центра датчика в координатах viewBox. */
+    .stat-needle {
+        transform: rotate(calc(var(--ang, 225) * 1deg));
+        transform-origin: 60px 60px;
+        transform-box: view-box;
+        will-change: transform;
+    }
+    .stat-needle-l {
+        stroke: var(--color-primary-600);
+        stroke-width: 3.5;
+        stroke-linecap: round;
+    }
+    .stat-hub     { fill: var(--color-primary-600); }
+    .stat-hub-dot { fill: var(--color-ink-800); }
+    /* Цвета стопов градиента дуги — из токенов (var() резолвится в CSS, не в SVG-атрибуте) */
+    #gaugeGrad .g0 { stop-color: var(--color-primary-300); }
+    #gaugeGrad .g1 { stop-color: var(--color-primary-600); }
+
+    /* ── Подтверждение записи: «штамп» с прорисовкой галочки ──────── */
+    @keyframes stampPress {
+        0%   { opacity: 0; transform: scale(1.35) rotate(-4deg); }
+        60%  { opacity: 1; }
+        100% { opacity: 1; transform: scale(1) rotate(0); }
+    }
+    @keyframes stampGlow {
+        0%   { box-shadow: 0 0 0 0 rgba(0,102,179,.5); }
+        100% { box-shadow: 0 0 0 14px rgba(0,102,179,0); }
+    }
+    @keyframes drawCheck { to { stroke-dashoffset: 0; } }
+    .confirm-stamp {
+        animation: stampPress .5s cubic-bezier(.16,1,.3,1) both;
+    }
+    .confirm-stamp::after {
+        content: ""; position: absolute; inset: -1px; pointer-events: none;
+        animation: stampGlow .9s .15s cubic-bezier(.16,1,.3,1) forwards;
+    }
+    .confirm-stamp svg path {
+        stroke-dasharray: 30; stroke-dashoffset: 30;
+        animation: drawCheck .55s .28s cubic-bezier(.65,0,.35,1) forwards;
+    }
+
+    /* ── Тактильный отклик выбора: «щелчок» при отметке услуги ────── */
+    @keyframes popIn {
+        0%   { transform: scale(.2);  opacity: 0; }
+        100% { transform: scale(1);   opacity: 1; }
+    }
+    /* Перезапускается каждый раз, когда x-show меняет display:none → block */
+    .pop-in { animation: popIn .26s cubic-bezier(.16,1,.3,1); }
+
+    .stagger-1 { animation-delay: .1s; }
+    .stagger-2 { animation-delay: .22s; }
+    .stagger-3 { animation-delay: .34s; }
+    .stagger-4 { animation-delay: .46s; }
+    .stagger-5 { animation-delay: .58s; }
+    .stagger-6 { animation-delay: .70s; }
+
+    /* ── Scroll-reveal (вес и уверенность) ────────────────────────── */
+    [data-reveal] {
+        opacity: 0;
+        transform: translateY(42px);
+        transition: opacity .9s cubic-bezier(.16,1,.3,1), transform .9s cubic-bezier(.16,1,.3,1);
+        will-change: opacity, transform;
+    }
+    [data-reveal].is-visible { opacity: 1; transform: none; }
+    [data-reveal="left"]  { transform: translateX(-48px); }
+    [data-reveal="right"] { transform: translateX(48px); }
+    [data-reveal="scale"] { transform: scale(.94); }
+    [data-reveal-delay="1"] { transition-delay: .1s; }
+    [data-reveal-delay="2"] { transition-delay: .2s; }
+    [data-reveal-delay="3"] { transition-delay: .3s; }
+    [data-reveal-delay="4"] { transition-delay: .4s; }
+
+    @media (prefers-reduced-motion: reduce) {
+        [data-reveal], .animate-snap, .animate-slide-left, .animate-fade-in, .hero-panel, .hero-rise { animation: none !important; opacity: 1 !important; transform: none !important; }
+        .hero-check { animation: none !important; stroke-dashoffset: 0 !important; }
+        /* Датчики: без анимации — сразу показываем заполненную дугу */
+        .stat-arc { transition: none !important; stroke-dashoffset: var(--off, 0) !important; }
+        /* Декоративное непрерывное движение полностью останавливаем */
+        .animate-marquee, .animate-blob, .loader-badge, .loader-logo, .loader-fill { animation: none !important; }
+        .animate-ping { animation: none !important; }
+        /* Микропереходы сводим к мгновенным, оставляя только смену состояния */
+        .hover-lift, .card-steel, .card-steel::before, .btn-primary, .btn-primary::after, .icon-bubble { transition-duration: .01ms !important; }
+        /* Штамп подтверждения: показываем сразу, галочку — целиком */
+        .confirm-stamp, .confirm-stamp::after { animation: none !important; }
+        .confirm-stamp svg path { animation: none !important; stroke-dashoffset: 0 !important; }
+        .pop-in { animation: none !important; }
+    }
+
+    /* ── Бегущая строка ───────────────────────────────────────────── */
+    @keyframes marquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+    .animate-marquee { animation: marquee 38s linear infinite; }
+
+    /* ── Декоративное «зарево» отключено: на светлой теме blur(90px)
+       читался как синяя муть поверх карточек. Чистые поверхности > блюр. ── */
+    .glow {
+        display: none;
+    }
+    @keyframes blob {
+        0%,100% { transform: translate(0,0) scale(1); }
+        33%     { transform: translate(34px,-44px) scale(1.08); }
+        66%     { transform: translate(-26px,26px) scale(.95); }
+    }
+    .animate-blob { animation: blob 22s ease-in-out infinite; }
+
+    .hover-lift { transition: transform .4s cubic-bezier(.16,1,.3,1), box-shadow .4s, border-color .4s; }
+    .hover-lift:hover { transform: translateY(-4px); border-color: var(--color-primary-600); box-shadow: 0 24px 50px -20px rgba(0,0,0,.7); }
+
+    /* ── Метки и типографика ──────────────────────────────────────── */
+    .text-balance { text-wrap: balance; }
+    .num-tabular  { font-variant-numeric: tabular-nums; }
+
+    .eyebrow {
+        font-size: 11px; line-height: 1; letter-spacing: .22em;
+        text-transform: uppercase; font-weight: 700; color: var(--color-primary-500);
+        display: inline-flex; align-items: center; gap: .6rem;
+    }
+    .eyebrow::before {
+        content: ""; width: 28px; height: 2px;
+        background: linear-gradient(90deg, var(--color-accent-500), transparent);
+    }
+    .eyebrow-muted {
+        font-size: 11px; line-height: 1; letter-spacing: .2em;
+        text-transform: uppercase; font-weight: 700; color: var(--color-ink-400);
+    }
+
+    /* ── Хромированный / металлический текст ──────────────────────── */
+    .text-chrome {
+        background: linear-gradient(180deg, #FFFFFF 0%, #C9CFD8 45%, #8A929C 55%, #EDEFF3 100%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+    .text-amber-gradient {
+        background: linear-gradient(135deg, var(--color-primary-300) 0%, var(--color-primary-600) 100%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+
+    /* ── Стеклянная панель ────────────────────────────────────────── */
+    .glass {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(16px) saturate(140%);
+        -webkit-backdrop-filter: blur(16px) saturate(140%);
+        border: 1px solid rgba(13, 30, 55, 0.08);
+    }
+
+    /* ── Кнопки ───────────────────────────────────────────────────── */
+    .btn-primary {
+        display: inline-flex; align-items: center; gap: .75rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(145deg, var(--color-primary-400), var(--color-primary-600));
+        color: #FFFFFF; border-radius: 2px;
+        font-weight: 700; font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
+        position: relative; overflow: hidden;
+        transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s;
+        box-shadow: 0 10px 30px -12px rgba(0,102,179,.6);
+    }
+    .btn-primary::after {
+        content: ""; position: absolute; top: 0; left: -120%;
+        width: 60%; height: 100%;
+        background: linear-gradient(100deg, transparent, rgba(255,255,255,.45), transparent);
+        transition: left .6s ease;
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 40px -10px rgba(0,102,179,.75); }
+    .btn-primary:hover::after { left: 120%; }
+    .btn-primary:active { transform: translateY(0) scale(.985); box-shadow: 0 6px 18px -10px rgba(0,102,179,.6); }
+
+    .btn-ghost {
+        display: inline-flex; align-items: center; gap: .75rem;
+        padding: 1rem 2rem;
+        background: transparent; color: var(--color-ink-100);
+        border: 1px solid var(--color-ink-600); border-radius: 2px;
+        font-weight: 600; font-size: 13px; letter-spacing: .04em; text-transform: uppercase;
+        transition: all .3s cubic-bezier(.16,1,.3,1);
+    }
+    .btn-ghost:hover { border-color: var(--color-primary-500); color: var(--color-primary-400); background: rgba(0,102,179,.06); }
+    .btn-ghost:active { transform: scale(.985); }
+
+    /* ── Металлическая карточка (полированная сталь + блик) ───────── */
+    .card-steel {
+        position: relative;
+        background:
+            linear-gradient(160deg, rgba(255,255,255,.035) 0%, transparent 40%),
+            linear-gradient(160deg, var(--color-ink-800) 0%, var(--color-ink-900) 100%);
+        border: 1px solid var(--color-ink-700);
+        border-radius: 4px;
+        transition: transform .45s cubic-bezier(.16,1,.3,1), box-shadow .45s, border-color .45s;
+        overflow: hidden;
+    }
+    /* Световой блик, скользящий по поверхности при наведении */
+    .card-steel::before {
+        content: ""; position: absolute; inset: 0;
+        background: linear-gradient(115deg, transparent 30%, rgba(255,255,255,.06) 48%, transparent 60%);
+        transform: translateX(-100%);
+        transition: transform .8s cubic-bezier(.16,1,.3,1);
+        pointer-events: none;
+    }
+    .card-steel:hover {
+        transform: translateY(-6px);
+        border-color: var(--color-primary-600);
+        box-shadow: 0 24px 48px -20px rgba(13,30,55,.22), 0 0 0 1px rgba(0,102,179,.25);
+    }
+    .card-steel:hover::before { transform: translateX(100%); }
+
+    /* Верхняя «подсветка» кромки у активных элементов */
+    .edge-top {
+        position: relative;
+    }
+    .edge-top::after {
+        content: ""; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--color-primary-500), transparent);
+        opacity: 0; transition: opacity .4s;
+    }
+    .edge-top:hover::after { opacity: 1; }
+
+    /* Иконочная плашка */
+    .icon-bubble {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 3.25rem; height: 3.25rem; border-radius: 3px;
+        background: rgba(0,102,179,.1);
+        color: var(--color-primary-400);
+        border: 1px solid rgba(0,102,179,.18);
+        transition: all .4s cubic-bezier(.16,1,.3,1);
+    }
+    .card-steel:hover .icon-bubble {
+        background: var(--color-primary-500); color: #FFFFFF;
+        box-shadow: 0 0 24px rgba(0,102,179,.5);
+    }
+}
+
+[x-cloak] { display: none !important; }
+
+/* ════════════════════════════════════════════════════════════════════
+   ТЁМНЫЕ СЕКЦИИ НА СВЕТЛОЙ ТЕМЕ (hero с видео, лайтбокс)
+   Внутри .on-dark текст/кнопки/бордеры принудительно светлые.
+═══════════════════════════════════════════════════════════════════════ */
+.on-dark { color: #EAEEF3; }
+.on-dark .text-ink-100 { color: #FFFFFF !important; }
+.on-dark .text-ink-200 { color: #E6EBF1 !important; }
+.on-dark .text-ink-300 { color: #C7CFD9 !important; }
+.on-dark .text-ink-400 { color: #AAB3BE !important; }
+.on-dark .text-ink-500 { color: #8C95A0 !important; }
+.on-dark .border-ink-600 { border-color: rgba(255,255,255,.20) !important; }
+.on-dark .border-ink-700 { border-color: rgba(255,255,255,.12) !important; }
+.on-dark .btn-ghost { color: #FFFFFF; border-color: rgba(255,255,255,.32); background: transparent; }
+.on-dark .btn-ghost:hover { color: #FFFFFF; border-color: #FFFFFF; background: rgba(255,255,255,.08); }
+
+/* Светлая карточка ВНУТРИ тёмной секции (например, панель записи в hero) —
+   возвращаем тёмный текст/бордеры, т.к. сама карточка светлая. */
+.on-dark .card-steel .text-ink-100 { color: var(--color-ink-100) !important; }
+.on-dark .card-steel .text-ink-200 { color: var(--color-ink-200) !important; }
+.on-dark .card-steel .text-ink-300 { color: var(--color-ink-300) !important; }
+.on-dark .card-steel .text-ink-400 { color: var(--color-ink-400) !important; }
+.on-dark .card-steel .text-ink-500 { color: var(--color-ink-500) !important; }
+.on-dark .card-steel .border-ink-600 { border-color: var(--color-ink-600) !important; }
+.on-dark .card-steel .border-ink-700 { border-color: var(--color-ink-700) !important; }
+/* На тёмном hero синий градиент-заголовок делаем ярче (на светлой теме primary тёмный). */
+.on-dark .text-amber-gradient {
+    background: linear-gradient(135deg, #8FC0E4 0%, #2E8AD6 100%);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   МОТИОН: индикатор прокрутки, подсказка-скролл, пауза бегущей строки
+═══════════════════════════════════════════════════════════════════════ */
+
+/* Индикатор прокрутки — «датчик» сверху (ширина = % прокрутки). Тонкая
+   подложка во всю ширину делает его заметным даже в начале страницы. */
+#scroll-gauge-track {
+    position: fixed; inset: 0 0 auto 0;
+    height: 4px; z-index: 59; pointer-events: none;
+    background: rgba(13, 30, 55, .08);
+}
+#scroll-gauge {
+    position: fixed; inset: 0 auto auto 0;
+    height: 4px; width: 0;
+    z-index: 60; pointer-events: none;
+    background: linear-gradient(90deg, var(--color-primary-500), var(--color-primary-200));
+    box-shadow: 0 0 14px 1px rgba(0, 102, 179, .85);
+    will-change: width;
+}
+
+/* Бегущая строка: при наведении — пауза + подсветка пунктов (видно, что живая) */
+.marquee-wrap { cursor: default; }
+.marquee-wrap:hover .animate-marquee { animation-play-state: paused; }
+.marquee-wrap:hover .animate-marquee span { color: var(--color-ink-100); transition: color .25s; }
+
+/* Переходы между шагами визарда: вперёд — въезд справа, назад — слева */
+@keyframes wizFwd  { from { opacity: 0; transform: translateX(28px);  } to { opacity: 1; transform: none; } }
+@keyframes wizBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
+.wizard-step-fwd  { animation: wizFwd  .42s cubic-bezier(.16, 1, .3, 1) both; }
+.wizard-step-back { animation: wizBack .42s cubic-bezier(.16, 1, .3, 1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+    #scroll-gauge-track, #scroll-gauge { display: none; }
+    .wizard-step-fwd, .wizard-step-back { animation: none; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ШАПКА И НАВИГАЦИЯ
+═══════════════════════════════════════════════════════════════════════ */
+
+/* Бургер: три линии, плавный морф в крестик (single transform per line) */
+.burger { position: relative; display: block; width: 22px; height: 16px; }
+.burger span {
+    position: absolute; left: 0; height: 2px; border-radius: 2px;
+    background: currentColor;
+    transition: top .35s cubic-bezier(.16,1,.3,1),
+                transform .35s cubic-bezier(.16,1,.3,1),
+                width .35s cubic-bezier(.16,1,.3,1),
+                opacity .2s ease;
+}
+.burger span:nth-child(1) { top: 0;    width: 100%; }
+.burger span:nth-child(2) { top: 7px;  width: 65%; }
+.burger span:nth-child(3) { top: 14px; width: 100%; }
+.burger.is-open span:nth-child(1) { top: 7px; transform: rotate(45deg);  width: 100%; }
+.burger.is-open span:nth-child(2) { opacity: 0; width: 0; }
+.burger.is-open span:nth-child(3) { top: 7px; transform: rotate(-45deg); width: 100%; }
+
+/* Пункты мобильного меню: каскадный вход снизу-вверх */
+@keyframes navItemIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+.nav-m-item { animation: navItemIn .5s cubic-bezier(.16,1,.3,1) backwards; animation-delay: calc(var(--i, 0) * .05s + .08s); }
+
+@media (prefers-reduced-motion: reduce) {
+    .burger span { transition: none; }
+    .nav-m-item { animation: none; }
 }

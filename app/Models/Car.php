@@ -12,8 +12,58 @@ class Car extends Model
 
     protected $fillable = [
         'client_id', 'car_brand_id', 'car_model_id',
-        'vin', 'year', 'mileage', 'color'
+        'vin', 'license_plate', 'year', 'mileage', 'color',
+        'fuel_type', 'engine_volume', 'power', 'transmission', 'body_type',
     ];
+
+    protected $casts = [
+        'engine_volume' => 'decimal:1',
+        'power' => 'integer',
+    ];
+
+    /**
+     * @return array<string, string>
+     */
+    public static function fuelTypes(): array
+    {
+        return [
+            'petrol' => 'Бензин',
+            'diesel' => 'Дизель',
+            'hybrid' => 'Гибрид',
+            'electric' => 'Электро',
+            'gas' => 'Газ (ГБО)',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function transmissions(): array
+    {
+        return [
+            'manual' => 'Механика (МКПП)',
+            'automatic' => 'Автомат (АКПП)',
+            'robot' => 'Робот',
+            'variator' => 'Вариатор (CVT)',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function bodyTypes(): array
+    {
+        return [
+            'sedan' => 'Седан',
+            'hatchback' => 'Хэтчбек',
+            'liftback' => 'Лифтбек',
+            'wagon' => 'Универсал',
+            'suv' => 'Внедорожник / Кроссовер',
+            'coupe' => 'Купе',
+            'minivan' => 'Минивэн',
+            'pickup' => 'Пикап',
+        ];
+    }
 
     public function client()
     {
@@ -40,6 +90,9 @@ class Car extends Model
     {
         $brand = $this->brand?->name ?? '?';
         $model = $this->model?->name ?? '?';
-        return "$brand $model (VIN: {$this->vin})";
+        $plate = $this->license_plate ? " · {$this->license_plate}" : '';
+        $vin = $this->vin ? " · VIN {$this->vin}" : '';
+
+        return "{$brand} {$model}{$plate}{$vin}";
     }
 }

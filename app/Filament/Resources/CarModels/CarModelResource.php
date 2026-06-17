@@ -1,23 +1,28 @@
 <?php
 
 namespace App\Filament\Resources\CarModels;
-use Illuminate\Database\Eloquent\Builder;
 
 use App\Filament\Resources\CarModels\Pages\CreateCarModel;
 use App\Filament\Resources\CarModels\Pages\EditCarModel;
 use App\Filament\Resources\CarModels\Pages\ListCarModels;
 use App\Filament\Resources\CarModels\Schemas\CarModelForm;
 use App\Filament\Resources\CarModels\Tables\CarModelsTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\CarModel;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class CarModelResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = CarModel::class;
 
     // Иконка для модели
@@ -33,10 +38,9 @@ class CarModelResource extends Resource
     protected static ?string $pluralModelLabel = 'Модели автомобилей';
 
     // Группа в меню
-    protected static string|UnitEnum|null $navigationGroup = 'Автомобили';
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
 
-    // Сортировка внутри группы (марки – 1, модели – 2)
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
 
     // Поле для заголовка записи (используется в селектах)
     protected static ?string $recordTitleAttribute = 'name';
@@ -55,10 +59,12 @@ class CarModelResource extends Resource
     {
         return [];
     }
-public static function getEloquentQuery(): Builder
-{
-    return parent::getEloquentQuery()->withTrashed();
-}
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->withTrashed();
+    }
+
     public static function getPages(): array
     {
         return [

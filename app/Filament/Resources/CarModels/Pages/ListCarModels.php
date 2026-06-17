@@ -15,7 +15,8 @@ class ListCarModels extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Создать модель'),
+            CreateAction::make()->label('Добавить модель')
+                ->visible(fn () => CarModelResource::canCreate()),
         ];
     }
 
@@ -27,23 +28,20 @@ class ListCarModels extends ListRecords
                     ->withoutTrashed()
                     ->where('active', true)
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->withoutTrashed()->where('active', true)
+                ->modifyQueryUsing(fn (Builder $query) => $query->withoutTrashed()->where('active', true)
                 ),
             'inactive' => Tab::make('Неактивные')
                 ->badge(fn () => CarModelResource::getEloquentQuery()
                     ->withoutTrashed()
                     ->where('active', false)
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->withoutTrashed()->where('active', false)
+                ->modifyQueryUsing(fn (Builder $query) => $query->withoutTrashed()->where('active', false)
                 ),
             'deleted' => Tab::make('Удалённые')
                 ->badge(fn () => CarModelResource::getEloquentQuery()
                     ->onlyTrashed()
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->onlyTrashed()
+                ->modifyQueryUsing(fn (Builder $query) => $query->onlyTrashed()
                 ),
         ];
     }

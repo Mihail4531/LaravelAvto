@@ -2,14 +2,15 @@
 
 namespace App\Filament\Resources\TimeSlots\Tables;
 
+use App\Support\BranchScope;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -22,7 +23,8 @@ class TimeSlotsTable
                 TextColumn::make('branch.name')
                     ->label('Филиал')
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn () => BranchScope::shouldShowBranchUi()),
                 TextColumn::make('starts_at')
                     ->label('Начало')
                     ->dateTime('d.m.Y H:i')
@@ -43,7 +45,8 @@ class TimeSlotsTable
             ->filters([
                 SelectFilter::make('branch_id')
                     ->label('Филиал')
-                    ->relationship('branch', 'name'),
+                    ->relationship('branch', 'name')
+                    ->visible(fn () => BranchScope::shouldShowBranchUi()),
                 Filter::make('available')
                     ->label('Только доступные')
                     ->query(fn (Builder $query): Builder => $query->where('available', true)),

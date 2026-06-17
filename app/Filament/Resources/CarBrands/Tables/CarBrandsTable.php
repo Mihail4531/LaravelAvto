@@ -23,6 +23,7 @@ class CarBrandsTable
             ->columns([
                 ImageColumn::make('logo')
                     ->label('Логотип')
+                    ->disk('public')
                     ->circular()
                     ->imageWidth(40)     // вместо width()
                     ->imageHeight(40)    // вместо height()

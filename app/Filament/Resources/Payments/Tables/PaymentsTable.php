@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Payments\Tables;
 
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
@@ -39,10 +40,10 @@ class PaymentsTable
                         'warning' => 'transfer',
                     ])
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'cash'     => 'Наличные',
-                        'card'     => 'Карта',
+                        'cash' => 'Наличные',
+                        'card' => 'Карта',
                         'transfer' => 'Перевод',
-                        default    => $state,
+                        default => $state,
                     }),
 
                 TextColumn::make('cashier.name')
@@ -70,10 +71,21 @@ class PaymentsTable
                 SelectFilter::make('method')
                     ->label('Способ оплаты')
                     ->options([
-                        'cash'     => 'Наличные',
-                        'card'     => 'Карта',
+                        'cash' => 'Наличные',
+                        'card' => 'Карта',
                         'transfer' => 'Перевод',
                     ]),
+            ])
+            ->headerActions([
+                Action::make('export')
+                    ->label('Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->url(fn () => route('reports.payments', [
+                        'from' => now()->startOfMonth()->format('Y-m-d'),
+                        'to' => now()->format('Y-m-d'),
+                    ]))
+                    ->openUrlInNewTab(),
             ])
             ->recordActions([
                 EditAction::make()->label('Редактировать'),

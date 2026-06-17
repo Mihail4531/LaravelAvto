@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Cars\Tables;
 
+use App\Models\Car;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -11,7 +12,6 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 
 class CarsTable
@@ -36,6 +36,13 @@ class CarsTable
                     ->searchable()
                     ->sortable(),
 
+                TextColumn::make('license_plate')
+                    ->label('Гос. номер')
+                    ->badge()
+                    ->color('warning')
+                    ->placeholder('—')
+                    ->searchable(),
+
                 TextColumn::make('vin')
                     ->label('VIN')
                     ->searchable()
@@ -52,6 +59,25 @@ class CarsTable
                 TextColumn::make('color')
                     ->label('Цвет')
                     ->searchable(),
+
+                TextColumn::make('fuel_type')
+                    ->label('Топливо')
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => Car::fuelTypes()[$state] ?? '—')
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                TextColumn::make('engine_volume')
+                    ->label('Объём')
+                    ->formatStateUsing(fn ($state) => $state ? rtrim(rtrim(number_format((float) $state, 1, '.', ''), '0'), '.').' л' : '—')
+                    ->placeholder('—')
+                    ->toggleable(),
+
+                TextColumn::make('transmission')
+                    ->label('КПП')
+                    ->formatStateUsing(fn ($state) => Car::transmissions()[$state] ?? '—')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('created_at')
                     ->label('Создан')
@@ -72,21 +98,22 @@ class CarsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
-            ->filters([
-                TrashedFilter::make()->label('В корзине'),
-            ])
             ->recordActions([
-                EditAction::make()->label('Редактировать'),
-                DeleteAction::make()->label('Удалить'),
-                RestoreAction::make()->label('Восстановить'),
-                ForceDeleteAction::make()->label('Удалить навсегда'),
+                EditAction::make()->label('Редактировать')
+                    ->visible(fn ($record) => ! $record->trashed() && auth()->user()?->can('update_car')),
+                DeleteAction::make()->label('Удалить')
+                    ->visible(fn ($record) => ! $record->trashed() && auth()->user()?->can('delete_car')),
+                RestoreAction::make()->label('Восстановить')
+                    ->visible(fn ($record) => $record->trashed() && auth()->user()?->can('delete_car')),
+                ForceDeleteAction::make()->label('Удалить навсегда')
+                    ->visible(fn ($record) => $record->trashed() && auth()->user()?->can('delete_car')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->label('Удалить выбранные'),
                     ForceDeleteBulkAction::make()->label('Удалить навсегда'),
                     RestoreBulkAction::make()->label('Восстановить'),
-                ]),
+                ])->visible(fn () => auth()->user()?->can('delete_car')),
             ]);
     }
 }

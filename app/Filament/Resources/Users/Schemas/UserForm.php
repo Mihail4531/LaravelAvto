@@ -4,13 +4,16 @@ namespace App\Filament\Resources\Users\Schemas;
 
 use App\Models\Branch;
 use App\Models\Position;
+use App\Support\AccessLabels;
+use App\Support\Phone;
 use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Schema;
-use Spatie\Permission\Models\Role;
 
 class UserForm
 {
@@ -30,6 +33,14 @@ class UserForm
                             ->maxLength(255)
                             ->columnSpan(2),
 
+                        TextInput::make('login')
+                            ->label('Логин')
+                            ->helperText('Имя для входа в АИС.')
+                            ->required()
+                            ->alphaDash()
+                            ->unique('users', 'login', ignorable: fn ($record) => $record)
+                            ->maxLength(255),
+
                         TextInput::make('email')
                             ->label('Email')
                             ->email()
@@ -37,18 +48,17 @@ class UserForm
                             ->unique('users', 'email', ignorable: fn ($record) => $record)
                             ->maxLength(255),
 
-                        TextInput::make('phone')
+                        Phone::configure(TextInput::make('phone'))
                             ->label('Телефон')
-                            ->tel()
                             ->nullable()
                             ->maxLength(20),
 
                         TextInput::make('password')
-                            ->label($isEdit ? 'Новый пароль (оставьте пустым для сохранения)' : 'Пароль')
+                            ->label($isEdit ? 'Новый пароль (оставьте пустым чтобы не менять)' : 'Пароль')
                             ->password()
-                            ->required(!$isEdit)
+                            ->revealable()
+                            ->required(! $isEdit)
                             ->dehydrated(fn ($state) => filled($state))
-                            ->dehydrateStateUsing(fn ($state) => bcrypt($state))
                             ->minLength(8)
                             ->columnSpan(2),
                     ]),
@@ -58,17 +68,23 @@ class UserForm
                     ->schema([
                         Select::make('position_id')
                             ->label('Должность')
-                            ->options(Position::pluck('name', 'id'))
+                            ->options(Position::orderBy('name')->pluck('name', 'id'))
                             ->searchable()
                             ->nullable()
-                            ->placeholder('Выберите должность'),
+                            ->live()
+                            ->placeholder('Выберите должность')
+                            ->helperText('Роль доступа в систему определяется автоматически по должности.'),
 
                         Select::make('branch_id')
                             ->label('Филиал')
                             ->options(Branch::where('active', true)->pluck('name', 'id'))
                             ->searchable()
                             ->nullable()
-                            ->placeholder('Выберите филиал'),
+                            ->placeholder('Выберите филиал')
+                            // От филиала зависит рабочая зона сотрудника: он видит
+                            // заказы, заявки и слоты только своей точки. Управляющий
+                            // видит всю сеть независимо от филиала.
+                            ->helperText('Определяет, данные какого филиала видит сотрудник.'),
 
                         DatePicker::make('hire_date')
                             ->label('Дата приёма на работу')
@@ -79,14 +95,47 @@ class UserForm
                             ->default(true),
                     ]),
 
-                Section::make('Роли')
+                Section::make('Доступ в АИС')
+                    ->columns(1)
                     ->schema([
+                        Placeholder::make('role_from_position')
+                            ->label('Роль от должности')
+                            ->content(function (Get $get): string {
+                                $positionId = $get('position_id');
+                                if (! $positionId) {
+                                    return '— должность не выбрана';
+                                }
+
+                                $position = Position::find($positionId);
+                                if (! $position) {
+                                    return '— должность не найдена';
+                                }
+
+                                if (! $position->default_role) {
+                                    return 'Без доступа в АИС (должность не системная)';
+                                }
+
+                                return AccessLabels::role($position->default_role);
+                            }),
+
                         Select::make('roles')
-                            ->label('Роли')
+                            ->label('Дополнительные технические роли')
+                            ->helperText('Назначается вручную поверх роли от должности. Используется для super_admin (ИТ-сопровождение).')
+                            // Раздавать технические роли (super_admin) может только сам
+                            // super_admin — иначе управляющий мог бы выдать себе аварийный
+                            // доступ и обойти защиту break-glass.
+                            ->visible(fn (): bool => auth()->user()?->hasRole('super_admin') ?? false)
                             ->multiple()
-                            ->options(Role::pluck('name', 'name'))
                             ->preload()
-                            ->relationship('roles', 'name'),
+                            ->relationship(
+                                name: 'roles',
+                                titleAttribute: 'name',
+                                modifyQueryUsing: fn ($query) => $query->whereNotIn(
+                                    'name',
+                                    Position::whereNotNull('default_role')->pluck('default_role')->unique()->all()
+                                ),
+                            )
+                            ->getOptionLabelFromRecordUsing(fn ($record) => AccessLabels::role($record->name)),
                     ]),
             ]);
     }

@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Services\Schemas;
 
+use App\Models\Category;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
-use App\Models\Category;
 use Illuminate\Support\Str;
 
 class ServiceForm
@@ -19,16 +19,7 @@ class ServiceForm
             ->components([
                 Select::make('category_id')
                     ->label('Категория')
-                    ->options(function () {
-                        // Получаем все категории с их родителями
-                        $categories = Category::with('parent')->get();
-                        $options = [];
-                        foreach ($categories as $category) {
-                            $prefix = $category->parent ? '—— ' : '';
-                            $options[$category->id] = $prefix . $category->name;
-                        }
-                        return $options;
-                    })
+                    ->options(Category::orderBy('sort_order')->pluck('name', 'id'))
                     ->required()
                     ->searchable()
                     ->preload()
@@ -72,6 +63,7 @@ class ServiceForm
                 FileUpload::make('image')
                     ->label('Изображение услуги')
                     ->image()
+                    ->disk('public')
                     ->directory('services')
                     ->visibility('public')
                     ->nullable(),

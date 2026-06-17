@@ -7,15 +7,20 @@ use App\Filament\Resources\Appointments\Pages\EditAppointment;
 use App\Filament\Resources\Appointments\Pages\ListAppointments;
 use App\Filament\Resources\Appointments\Schemas\AppointmentForm;
 use App\Filament\Resources\Appointments\Tables\AppointmentsTable;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Appointment;
+use App\Support\BranchScope;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 use UnitEnum;
 
 class AppointmentResource extends Resource
 {
+    use ResourcePermissions;
+
     protected static ?string $model = Appointment::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-calendar';
@@ -26,15 +31,16 @@ class AppointmentResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Заявки';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Клиенты и заказы';
+    protected static string|UnitEnum|null $navigationGroup = 'Работа';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'client_name';
 
     public static function getNavigationBadge(): ?string
     {
         $count = Appointment::where('status', 'new')->count();
+
         return $count > 0 ? (string) $count : null;
     }
 
@@ -56,6 +62,15 @@ class AppointmentResource extends Resource
     public static function getRelations(): array
     {
         return [];
+    }
+
+    /**
+     * Разграничение по филиалам: сотрудник видит заявки только своего филиала,
+     * управляющий/админ — всю сеть (см. App\Support\BranchScope).
+     */
+    public static function getEloquentQuery(): Builder
+    {
+        return BranchScope::apply(parent::getEloquentQuery());
     }
 
     public static function getPages(): array

@@ -13,7 +13,8 @@ class ListPositions extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-           CreateAction::make()->label('Создать должность'),
+            CreateAction::make()->label('Создать должность')
+                ->visible(fn () => PositionResource::canCreate()),
         ];
     }
 }

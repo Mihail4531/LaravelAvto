@@ -7,6 +7,8 @@ use App\Filament\Resources\Services\Pages\EditService;
 use App\Filament\Resources\Services\Pages\ListServices;
 use App\Filament\Resources\Services\Schemas\ServiceForm;
 use App\Filament\Resources\Services\Tables\ServicesTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Service;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -16,6 +18,9 @@ use UnitEnum;
 
 class ServiceResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = Service::class;
 
     // Иконка в меню
@@ -31,10 +36,10 @@ class ServiceResource extends Resource
     protected static ?string $pluralModelLabel = 'Услуги';
 
     // Группа в меню
-    protected static string|UnitEnum|null $navigationGroup = 'Сервис';
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
 
-    // Порядок сортировки внутри группы (после категорий)
-    protected static ?int $navigationSort = 2;
+    // Порядок сортировки внутри группы
+    protected static ?int $navigationSort = 1;
 
     // Поле для заголовка записи
     protected static ?string $recordTitleAttribute = 'name';

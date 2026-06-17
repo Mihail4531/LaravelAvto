@@ -19,6 +19,7 @@ class ServicesTable
             ->columns([
                 ImageColumn::make('image')
                     ->label('Изображение')
+                    ->disk('public')
                     ->circular()
                     ->width(40),
                 TextColumn::make('name')
@@ -55,13 +56,15 @@ class ServicesTable
             ])
             ->defaultSort('sort_order')
             ->recordActions([
-                EditAction::make()->label('Редактировать'),
-                DeleteAction::make()->label('Удалить'),
+                EditAction::make()->label('Редактировать')
+                    ->visible(fn () => auth()->user()?->can('update_service')),
+                DeleteAction::make()->label('Удалить')
+                    ->visible(fn () => auth()->user()?->can('delete_service')),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
                     DeleteBulkAction::make()->label('Удалить выбранные'),
-                ]),
+                ])->visible(fn () => auth()->user()?->can('delete_service')),
             ]);
     }
 }

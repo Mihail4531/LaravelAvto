@@ -1,0 +1,340 @@
+// АИС «Автосервис» — схема БД. Вставить на https://dbdiagram.io/d → Export PDF/SVG.
+
+Table users {
+  id integer [pk, increment]
+  position_id integer [ref: > positions.id]
+  branch_id integer [ref: > branches.id]
+  name varchar
+  email varchar [unique]
+  email_verified_at timestamp
+  password varchar
+  phone varchar
+  avatar_path varchar
+  hire_date date
+  active boolean
+  remember_token varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table positions {
+  id integer [pk, increment]
+  name varchar
+  hourly_rate decimal
+  default_role varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table branches {
+  id integer [pk, increment]
+  name varchar
+  slug varchar [unique]
+  city varchar
+  address varchar
+  phone varchar
+  email varchar
+  work_hours varchar
+  work_days_start varchar
+  work_days_end varchar
+  work_time_start time
+  work_time_end time
+  latitude decimal
+  longitude decimal
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table car_brands {
+  id integer [pk, increment]
+  name varchar [unique]
+  slug varchar [unique]
+  logo varchar
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table car_models {
+  id integer [pk, increment]
+  car_brand_id integer [ref: > car_brands.id]
+  name varchar
+  slug varchar
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table categories {
+  id integer [pk, increment]
+  name varchar
+  slug varchar [unique]
+  description text
+  sort_order integer
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table services {
+  id integer [pk, increment]
+  category_id integer [ref: > categories.id]
+  name varchar
+  slug varchar [unique]
+  description text
+  duration_minutes integer
+  price decimal
+  image varchar
+  active boolean
+  sort_order integer
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table clients {
+  id integer [pk, increment]
+  last_name varchar
+  first_name varchar
+  middle_name varchar
+  phone varchar [unique]
+  email varchar [unique]
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table cars {
+  id integer [pk, increment]
+  client_id integer [ref: > clients.id]
+  car_brand_id integer [ref: > car_brands.id]
+  car_model_id integer [ref: > car_models.id]
+  year integer
+  vin varchar [unique]
+  license_plate varchar
+  mileage integer
+  color varchar
+  fuel_type varchar
+  engine_volume decimal
+  power smallint
+  transmission varchar
+  body_type varchar
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table time_slots {
+  id integer [pk, increment]
+  branch_id integer [ref: > branches.id]
+  starts_at datetime
+  ends_at datetime
+  available boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table appointments {
+  id integer [pk, increment]
+  branch_id integer [ref: > branches.id]
+  time_slot_id integer [ref: > time_slots.id]
+  car_brand_id integer [ref: > car_brands.id]
+  car_model_id integer [ref: > car_models.id]
+  client_name varchar
+  client_phone varchar
+  client_email varchar
+  problem_description text
+  status varchar
+  processed_by integer [ref: > users.id]
+  processed_at datetime
+  order_id integer [ref: > orders.id]
+  reject_reason varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table appointment_service {
+  id integer [pk, increment]
+  appointment_id integer [ref: > appointments.id]
+  service_id integer [ref: > services.id]
+}
+
+Table parts {
+  id integer [pk, increment]
+  article varchar [unique]
+  name varchar
+  unit varchar
+  price decimal
+  stock_quantity integer
+  reserved_quantity integer
+  min_stock_quantity decimal
+  location varchar
+  active boolean
+  is_universal boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table car_model_part {
+  id integer [pk, increment]
+  part_id integer [ref: > parts.id]
+  car_model_id integer [ref: > car_models.id]
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table part_movements {
+  id integer [pk, increment]
+  part_id integer [ref: > parts.id]
+  order_id integer [ref: > orders.id]
+  user_id integer [ref: > users.id]
+  type varchar
+  quantity decimal
+  comment varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table part_requests {
+  id integer [pk, increment]
+  order_id integer [ref: > orders.id]
+  part_id integer [ref: > parts.id]
+  mechanic_id integer [ref: > users.id]
+  quantity decimal
+  status varchar
+  comment text
+  issued_by integer [ref: > users.id]
+  issued_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table orders {
+  id integer [pk, increment]
+  branch_id integer [ref: > branches.id]
+  client_id integer [ref: > clients.id]
+  car_id integer [ref: > cars.id]
+  receiver_id integer [ref: > users.id]
+  planned_finish datetime
+  actual_finish datetime
+  current_mileage integer
+  damages_on_acceptance text
+  equipment varchar
+  fuel_level varchar
+  problem_description text
+  status varchar
+  total_amount decimal
+  comment text
+  created_at timestamp
+  updated_at timestamp
+  deleted_at timestamp
+}
+
+Table order_service {
+  id integer [pk, increment]
+  order_id integer [ref: > orders.id]
+  service_id integer [ref: > services.id]
+  executor_id integer [ref: > users.id]
+  quantity decimal
+  price decimal
+  sum decimal
+  status varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table order_part {
+  id integer [pk, increment]
+  order_id integer [ref: > orders.id]
+  part_id integer [ref: > parts.id]
+  quantity decimal
+  price decimal
+  sum decimal
+  is_issued boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table payments {
+  id integer [pk, increment]
+  order_id integer [ref: > orders.id]
+  cashier_id integer [ref: > users.id]
+  paid_at datetime
+  amount decimal
+  method varchar
+  comment varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table gallery_items {
+  id integer [pk, increment]
+  title varchar
+  caption varchar
+  image varchar
+  size varchar
+  sort_order integer
+  active boolean
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table client_lookup_codes {
+  id integer [pk, increment]
+  email varchar
+  code varchar
+  attempts smallint
+  expires_at timestamp
+  used_at timestamp
+  ip_address varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table notifications {
+  id uuid [pk]
+  type varchar
+  notifiable_type varchar
+  notifiable_id integer
+  data text
+  read_at timestamp
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table roles {
+  id integer [pk, increment]
+  name varchar
+  guard_name varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table permissions {
+  id integer [pk, increment]
+  name varchar
+  guard_name varchar
+  created_at timestamp
+  updated_at timestamp
+}
+
+Table model_has_roles {
+  role_id integer [ref: > roles.id]
+  model_type varchar
+  model_id integer
+}
+
+Table model_has_permissions {
+  permission_id integer [ref: > permissions.id]
+  model_type varchar
+  model_id integer
+}
+
+Table role_has_permissions {
+  permission_id integer [ref: > permissions.id]
+  role_id integer [ref: > roles.id]
+}

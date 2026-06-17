@@ -13,7 +13,8 @@ class Order extends Model
     protected $fillable = [
         'branch_id', 'client_id', 'car_id', 'receiver_id',
         'planned_finish', 'actual_finish', 'current_mileage',
-        'problem_description', 'status', 'total_amount', 'comment'
+        'damages_on_acceptance', 'equipment', 'fuel_level',
+        'problem_description', 'status', 'total_amount', 'comment',
     ];
 
     protected $casts = [
@@ -23,12 +24,16 @@ class Order extends Model
     ];
 
     const STATUS_NEW = 'new';
+
     const STATUS_IN_PROGRESS = 'in_progress';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CLOSED = 'closed';
+
     const STATUS_CANCELLED = 'cancelled';
 
-    public static function statuses()
+    public static function statuses(): array
     {
         return [
             self::STATUS_NEW => 'Новый',
@@ -37,6 +42,47 @@ class Order extends Model
             self::STATUS_CLOSED => 'Закрыт',
             self::STATUS_CANCELLED => 'Отменён',
         ];
+    }
+
+    /**
+     * Наряд «открыт» (можно менять состав: услуги, запчасти, исполнителей),
+     * только пока он новый или в работе. Выполнен/закрыт/отменён — заморожен.
+     */
+    public function isOpen(): bool
+    {
+        return in_array($this->status, [self::STATUS_NEW, self::STATUS_IN_PROGRESS], true);
+    }
+
+    protected static function booted(): void
+    {
+        // При переводе заказа в статус «Отменён» — снимаем резервы с невыданных запчастей
+        static::updating(function (Order $order) {
+            if (
+                $order->isDirty('status') &&
+                $order->status === self::STATUS_CANCELLED &&
+                $order->getOriginal('status') !== self::STATUS_CANCELLED
+            ) {
+                $order->load('parts');
+
+                foreach ($order->parts as $part) {
+                    $isIssued = (bool) $part->pivot->is_issued;
+                    $qty = (float) $part->pivot->quantity;
+
+                    if (! $isIssued && $qty > 0) {
+                        $part->decrement('reserved_quantity', $qty);
+
+                        PartMovement::create([
+                            'part_id' => $part->id,
+                            'order_id' => $order->id,
+                            'user_id' => auth()->id(),
+                            'type' => PartMovement::TYPE_RELEASE,
+                            'quantity' => $qty,
+                            'comment' => 'Снятие резерва при отмене заказа',
+                        ]);
+                    }
+                }
+            }
+        });
     }
 
     public function branch()
@@ -67,15 +113,15 @@ class Order extends Model
     public function services()
     {
         return $this->belongsToMany(Service::class, 'order_service')
-                    ->withPivot('executor_id', 'quantity', 'price', 'sum', 'status')
-                    ->withTimestamps();
+            ->withPivot('executor_id', 'quantity', 'price', 'sum', 'status')
+            ->withTimestamps();
     }
 
     public function parts()
     {
         return $this->belongsToMany(Part::class, 'order_part')
-                    ->withPivot('quantity', 'price', 'sum', 'is_issued')
-                    ->withTimestamps();
+            ->withPivot('quantity', 'price', 'sum', 'is_issued')
+            ->withTimestamps();
     }
 
     public function payments()
@@ -83,11 +129,31 @@ class Order extends Model
         return $this->hasMany(Payment::class);
     }
 
-   public function recalculateTotal()
-{
-    $servicesSum = $this->services->sum('pivot.sum');
-    $partsSum = $this->parts->sum('pivot.sum');
-    $this->total_amount = $servicesSum + $partsSum;
-    $this->saveQuietly();
-}
+    /**
+     * Давальческие запчасти — привезённые клиентом. Не со склада и без
+     * стоимости (в total_amount не входят), фиксируются для наряда.
+     */
+    public function customerParts()
+    {
+        return $this->hasMany(OrderCustomerPart::class);
+    }
+
+    public function recalculateTotal(): void
+    {
+        $this->load('services', 'parts');
+        $servicesSum = $this->services->sum('pivot.sum');
+        $partsSum = $this->parts->sum('pivot.sum');
+        $this->total_amount = $servicesSum + $partsSum;
+        $this->saveQuietly();
+    }
+
+    public function getPaidAmountAttribute(): float
+    {
+        return (float) $this->payments()->sum('amount');
+    }
+
+    public function getRemainingAmountAttribute(): float
+    {
+        return max(0, (float) $this->total_amount - $this->paid_amount);
+    }
 }

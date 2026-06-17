@@ -11,7 +11,7 @@ class Client extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'last_name', 'first_name', 'middle_name', 'phone', 'email'
+        'last_name', 'first_name', 'middle_name', 'phone', 'email',
     ];
 
     public function cars()
@@ -26,6 +26,16 @@ class Client extends Model
 
     public function getFullNameAttribute()
     {
-        return trim($this->last_name . ' ' . $this->first_name . ' ' . $this->middle_name);
+        return trim($this->last_name.' '.$this->first_name.' '.$this->middle_name);
+    }
+
+    /**
+     * Email всегда храним в нижнем регистре без пробелов по краям, чтобы
+     * «Ivan@mail.ru» и «ivan@mail.ru» не плодили почти-дубли и совпадали
+     * при поиске/конвертации заявок.
+     */
+    public function setEmailAttribute($value): void
+    {
+        $this->attributes['email'] = $value !== null ? mb_strtolower(trim($value)) : null;
     }
 }

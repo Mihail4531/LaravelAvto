@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Branches\Schemas;
 
+use App\Support\Phone;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -54,13 +55,9 @@ class BranchForm
                                     ->schema([
                                         Grid::make(2)
                                             ->schema([
-                                                TextInput::make('phone')
+                                                Phone::configure(TextInput::make('phone'))
                                                     ->label('Телефон')
-                                                    ->required()
-                                                    ->mask('+7 (999) 999-99-99')
-                                                    ->placeholder('+7 (123) 456-78-90')
-                                                    ->regex('/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/')
-                                                    ->rule('regex:/^\+7 \(\d{3}\) \d{3}-\d{2}-\d{2}$/'),
+                                                    ->required(),
                                                 TextInput::make('email')
                                                     ->label('Email')
                                                     ->email(),
@@ -117,7 +114,7 @@ class BranchForm
                             ->columnSpan(['default' => 8, 'xl' => 6])
                             ->schema([
                                 Section::make('Статус')
-                                   ->icon('heroicon-o-check-circle')
+                                    ->icon('heroicon-o-check-circle')
                                     ->schema([
                                         Toggle::make('active')
                                             ->label('Филиал активен')

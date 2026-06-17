@@ -7,6 +7,8 @@ use App\Filament\Resources\Positions\Pages\EditPosition;
 use App\Filament\Resources\Positions\Pages\ListPositions;
 use App\Filament\Resources\Positions\Schemas\PositionForm;
 use App\Filament\Resources\Positions\Tables\PositionsTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Position;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -16,14 +18,23 @@ use UnitEnum;
 
 class PositionResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = Position::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-briefcase';
+
     protected static ?string $navigationLabel = 'Должности';
+
     protected static ?string $modelLabel = 'должность';
+
     protected static ?string $pluralModelLabel = 'Должности';
-    protected static string|UnitEnum|null $navigationGroup = 'Управление персоналом';
-    protected static ?int $navigationSort = 1;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
+
+    protected static ?int $navigationSort = 7;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

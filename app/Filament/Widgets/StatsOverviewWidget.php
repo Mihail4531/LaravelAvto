@@ -15,8 +15,8 @@ class StatsOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $newAppointments = Appointment::where('status', 'new')->count();
-        $activeOrders    = Order::whereIn('status', ['new', 'in_progress'])->count();
-        $overdueOrders   = Order::whereIn('status', ['new', 'in_progress'])
+        $activeOrders = Order::whereIn('status', ['new', 'in_progress'])->count();
+        $overdueOrders = Order::whereIn('status', ['new', 'in_progress'])
             ->whereNotNull('planned_finish')
             ->where('planned_finish', '<', now())
             ->count();
@@ -33,14 +33,14 @@ class StatsOverviewWidget extends BaseWidget
                 ->color($newAppointments > 0 ? 'warning' : 'success')
                 ->url(route('filament.admin.resources.appointments.index')),
 
-            Stat::make('Активные заказы', $activeOrders)
+            Stat::make('Активные заказ-наряды', $activeOrders)
                 ->description($overdueOrders > 0 ? "{$overdueOrders} просрочен(о)" : 'Всё в срок')
                 ->descriptionIcon($overdueOrders > 0 ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-check-circle')
                 ->color($overdueOrders > 0 ? 'danger' : 'primary')
                 ->url(route('filament.admin.resources.orders.index')),
 
-            Stat::make('Выручка сегодня', '₽ ' . number_format($todayRevenue, 0, '.', ' '))
-                ->description('За месяц: ₽ ' . number_format($monthRevenue, 0, '.', ' '))
+            Stat::make('Выручка сегодня', '₽ '.number_format($todayRevenue, 0, '.', ' '))
+                ->description('За месяц: ₽ '.number_format($monthRevenue, 0, '.', ' '))
                 ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
         ];

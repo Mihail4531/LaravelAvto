@@ -9,21 +9,35 @@ class Appointment extends Model
 {
     use HasFactory;
 
- protected $fillable = [
-    'branch_id', 'time_slot_id', 'car_brand_id', 'car_model_id',
-    'client_name', 'client_phone', 'client_email', 'problem_description',
-    'status', 'processed_by', 'processed_at', 'order_id', 'reject_reason'
-];
+    protected $fillable = [
+        'branch_id', 'time_slot_id', 'car_brand_id', 'car_model_id',
+        'client_name', 'client_phone', 'client_email', 'problem_description',
+        'status', 'processed_by', 'processed_at', 'order_id', 'reject_reason',
+    ];
 
     protected $casts = [
         'processed_at' => 'datetime',
     ];
 
     const STATUS_NEW = 'new';
+
     const STATUS_CONFIRMED = 'confirmed';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_CONVERTED = 'converted';
+
     const STATUS_CANCELLED = 'cancelled';
+
+    /**
+     * Склейка ФИО из частей в одну строку (как Client::full_name).
+     * Лишние пробелы схлопываются, пустое отчество не оставляет хвоста.
+     * Используется и мастером записи на сайте, и формой заявки в админке.
+     */
+    public static function composeName(?string $lastName, ?string $firstName, ?string $middleName): string
+    {
+        return trim(preg_replace('/\s+/', ' ', "{$lastName} {$firstName} {$middleName}"));
+    }
 
     public static function statuses()
     {

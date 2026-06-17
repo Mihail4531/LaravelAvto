@@ -36,6 +36,7 @@ class CarBrandForm
                 FileUpload::make('logo')
                     ->label('Логотип')
                     ->image()
+                    ->disk('public')
                     ->directory('brands/logos')
                     ->visibility('public')
                     ->nullable()

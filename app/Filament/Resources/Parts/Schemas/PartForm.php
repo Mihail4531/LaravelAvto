@@ -2,9 +2,10 @@
 
 namespace App\Filament\Resources\Parts\Schemas;
 
-use Filament\Forms\Components\Section;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class PartForm
@@ -62,15 +63,42 @@ class PartForm
 
                         TextInput::make('reserved_quantity')
                             ->label('Зарезервировано')
-                            ->required()
+                            ->numeric()
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->helperText('Управляется автоматически через заказы'),
+
+                        TextInput::make('min_stock_quantity')
+                            ->label('Минимальный остаток')
                             ->numeric()
                             ->minValue(0)
-                            ->default(0),
+                            ->default(0)
+                            ->helperText('При достижении этого порога — сигнал о пополнении'),
 
                         Toggle::make('active')
                             ->label('Активна')
                             ->default(true)
                             ->columnSpan(2),
+                    ]),
+
+                Section::make('Применяемость')
+                    ->description('Для каких авто подходит запчасть. Универсальные (масло, химия, крепёж) подходят всем.')
+                    ->columns(1)
+                    ->schema([
+                        Toggle::make('is_universal')
+                            ->label('Универсальная — подходит для любого авто')
+                            ->default(false)
+                            ->live(),
+
+                        Select::make('carModels')
+                            ->label('Подходит для моделей')
+                            ->relationship('carModels', 'name')
+                            ->getOptionLabelFromRecordUsing(fn ($record) => trim(($record->brand?->name ?? '').' '.$record->name))
+                            ->multiple()
+                            ->preload()
+                            ->searchable()
+                            ->visible(fn (callable $get) => ! $get('is_universal'))
+                            ->helperText('Можно оставить пустым, если применяемость пока неизвестна — система не будет придираться.'),
                     ]),
             ]);
     }

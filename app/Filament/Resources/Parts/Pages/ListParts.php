@@ -13,7 +13,9 @@ class ListParts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()->label('Добавить запчасть')
+                ->icon('heroicon-o-plus')
+                ->visible(fn () => PartResource::canCreate()),
         ];
     }
 }

@@ -12,6 +12,8 @@ use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Grouping\Group;
 use Filament\Tables\Table;
 
 class CarModelsTable
@@ -52,6 +54,20 @@ class CarModelsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('brand.name')
+            ->persistFiltersInSession()
+            ->filters([
+                SelectFilter::make('car_brand_id')
+                    ->label('Марка')
+                    ->relationship('brand', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->multiple(),
+            ])
+            ->groups([
+                Group::make('brand.name')
+                    ->label('Марка')
+                    ->collapsible(),
+            ])
             ->recordActions([
                 EditAction::make()->label('Редактировать'),
                 DeleteAction::make()->label('Удалить'),

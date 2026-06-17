@@ -7,18 +7,32 @@ use App\Filament\Resources\Parts\Pages\EditPart;
 use App\Filament\Resources\Parts\Pages\ListParts;
 use App\Filament\Resources\Parts\Schemas\PartForm;
 use App\Filament\Resources\Parts\Tables\PartsTable;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Part;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use UnitEnum;
 
 class PartResource extends Resource
 {
+    use ResourcePermissions;
+
     protected static ?string $model = Part::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
+    protected static ?string $navigationLabel = 'Запчасти';
+
+    protected static ?string $modelLabel = 'запчасть';
+
+    protected static ?string $pluralModelLabel = 'Запчасти и материалы';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Склад';
+
+    protected static ?int $navigationSort = 1;
 
     protected static ?string $recordTitleAttribute = 'name';
 
@@ -34,9 +48,13 @@ class PartResource extends Resource
 
     public static function getRelations(): array
     {
-        return [
-            //
-        ];
+        return [];
+    }
+
+    // Подгружаем применяемость для колонки «Применяемость» (без N+1).
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()->with('carModels.brand');
     }
 
     public static function getPages(): array

@@ -6,11 +6,11 @@ use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
-use Filament\Notifications\Notification;
 use Illuminate\Database\QueryException;
 
 class CategoriesTable
@@ -19,9 +19,8 @@ class CategoriesTable
     {
         return $table
             ->columns([
-                ImageColumn::make('image')->label('Изображение')->circular()->width(40),
+                ImageColumn::make('image')->label('Изображение')->disk('public')->circular()->width(40),
                 TextColumn::make('name')->label('Название')->searchable()->sortable(),
-                TextColumn::make('parent.name')->label('Родитель')->sortable(),
                 TextColumn::make('sort_order')->label('Порядок')->sortable(),
                 ToggleColumn::make('active')->label('Активна')->sortable(),
                 TextColumn::make('created_at')->label('Создана')->dateTime('d.m.Y H:i')->toggleable(isToggledHiddenByDefault: true),
@@ -29,9 +28,11 @@ class CategoriesTable
             ])
             ->defaultSort('sort_order')
             ->recordActions([
-                EditAction::make()->label('Редактировать'),
+                EditAction::make()->label('Редактировать')
+                    ->visible(fn () => auth()->user()?->can('update_category')),
                 DeleteAction::make()
                     ->label('Удалить')
+                    ->visible(fn () => auth()->user()?->can('delete_category'))
                     ->successNotification(null)   // отключаем стандартное уведомление
                     ->action(function ($record) {
                         try {
@@ -45,7 +46,7 @@ class CategoriesTable
                                 Notification::make()
                                     ->danger()
                                     ->title('Невозможно удалить категорию')
-                                    ->body('Категория содержит подкатегории или услуги. Сначала удалите или переназначьте их.')
+                                    ->body('Категория содержит услуги. Сначала удалите или переназначьте их.')
                                     ->send();
                             } else {
                                 throw $e;
@@ -76,19 +77,19 @@ class CategoriesTable
                             if (count($deleted) > 0) {
                                 Notification::make()
                                     ->success()
-                                    ->title('Удалено категорий: ' . count($deleted))
-                                    ->body('Удалены: ' . implode(', ', $deleted))
+                                    ->title('Удалено категорий: '.count($deleted))
+                                    ->body('Удалены: '.implode(', ', $deleted))
                                     ->send();
                             }
                             if (count($errors) > 0) {
                                 Notification::make()
                                     ->danger()
                                     ->title('Некоторые категории не удалены')
-                                    ->body('Следующие категории содержат подкатегории или услуги: ' . implode(', ', $errors))
+                                    ->body('Следующие категории содержат услуги: '.implode(', ', $errors))
                                     ->send();
                             }
                         }),
-                ]),
+                ])->visible(fn () => auth()->user()?->can('delete_category')),
             ]);
     }
 }

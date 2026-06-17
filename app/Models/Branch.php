@@ -17,7 +17,7 @@ class Branch extends Model
         'work_days_end',        // день окончания рабочей недели
         'work_time_start',      // время начала работы
         'work_time_end',        // время окончания работы
-        'latitude', 'longitude', 'active'
+        'latitude', 'longitude', 'active',
     ];
 
     protected $casts = [
@@ -34,15 +34,31 @@ class Branch extends Model
             'thursday' => 'Чт', 'friday' => 'Пт', 'saturday' => 'Сб', 'sunday' => 'Вс',
         ];
         $start = $days[$this->work_days_start] ?? $this->work_days_start;
-        $end   = $days[$this->work_days_end] ?? $this->work_days_end;
+        $end = $days[$this->work_days_end] ?? $this->work_days_end;
         $timeStart = $this->work_time_start?->format('H:i') ?? '09:00';
-        $timeEnd   = $this->work_time_end?->format('H:i') ?? '21:00';
+        $timeEnd = $this->work_time_end?->format('H:i') ?? '21:00';
+
         return ($start === $end) ? "{$start} {$timeStart}–{$timeEnd}" : "{$start}–{$end} {$timeStart}–{$timeEnd}";
     }
 
     // Связи (оставляем как есть)
-    public function timeSlots() { return $this->hasMany(TimeSlot::class); }
-    public function appointments() { return $this->hasMany(Appointment::class); }
-    public function orders() { return $this->hasMany(Order::class); }
-    public function users() { return $this->hasMany(User::class); }
+    public function timeSlots()
+    {
+        return $this->hasMany(TimeSlot::class);
+    }
+
+    public function appointments()
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class);
+    }
 }

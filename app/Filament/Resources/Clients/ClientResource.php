@@ -5,8 +5,11 @@ namespace App\Filament\Resources\Clients;
 use App\Filament\Resources\Clients\Pages\CreateClient;
 use App\Filament\Resources\Clients\Pages\EditClient;
 use App\Filament\Resources\Clients\Pages\ListClients;
+use App\Filament\Resources\Clients\RelationManagers\CarsRelationManager;
+use App\Filament\Resources\Clients\RelationManagers\OrdersRelationManager;
 use App\Filament\Resources\Clients\Schemas\ClientForm;
 use App\Filament\Resources\Clients\Tables\ClientsTable;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Client;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -18,6 +21,8 @@ use UnitEnum;
 
 class ClientResource extends Resource
 {
+    use ResourcePermissions;
+
     protected static ?string $model = Client::class;
 
     // Иконка в меню
@@ -33,10 +38,10 @@ class ClientResource extends Resource
     protected static ?string $pluralModelLabel = 'Клиенты';
 
     // Группа в меню
-    protected static string|UnitEnum|null $navigationGroup = 'Клиенты и заказы';
+    protected static string|UnitEnum|null $navigationGroup = 'Работа';
 
     // Порядок сортировки в группе
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 4;
 
     // Поле для заголовка записи (используется в селектах)
     protected static ?string $recordTitleAttribute = 'phone';
@@ -53,7 +58,10 @@ class ClientResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            CarsRelationManager::class,
+            OrdersRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

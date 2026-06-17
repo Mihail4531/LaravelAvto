@@ -15,7 +15,8 @@ class ListBranches extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make(),
+            CreateAction::make()->label('Добавить филиал')
+                ->visible(fn () => BranchResource::canCreate()),
         ];
     }
 
@@ -27,23 +28,20 @@ class ListBranches extends ListRecords
                     ->withoutTrashed()
                     ->where('active', true)
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->withoutTrashed()->where('active', true)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->withoutTrashed()->where('active', true)),
 
             'inactive' => Tab::make('Неактивные')
                 ->badge(fn () => BranchResource::getEloquentQuery()
                     ->withoutTrashed()
                     ->where('active', false)
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->withoutTrashed()->where('active', false)),
+                ->modifyQueryUsing(fn (Builder $query) => $query->withoutTrashed()->where('active', false)),
 
             'deleted' => Tab::make('Удалённые')
                 ->badge(fn () => BranchResource::getEloquentQuery()
                     ->onlyTrashed()
                     ->count())
-                ->modifyQueryUsing(fn (Builder $query) =>
-                    $query->onlyTrashed()),
+                ->modifyQueryUsing(fn (Builder $query) => $query->onlyTrashed()),
         ];
     }
 }

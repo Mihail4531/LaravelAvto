@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Services\Pages;
 
 use App\Filament\Resources\Services\ServiceResource;
+use App\Models\Service;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Service;
 
 class ListServices extends ListRecords
 {
@@ -16,7 +16,8 @@ class ListServices extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Создать услугу'),
+            CreateAction::make()->label('Добавить услугу')
+                ->visible(fn () => ServiceResource::canCreate()),
         ];
     }
 

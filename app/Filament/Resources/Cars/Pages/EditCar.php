@@ -12,6 +12,13 @@ class EditCar extends EditRecord
 {
     protected static string $resource = CarResource::class;
 
+    // По умолчанию заголовок берётся из recordTitleAttribute (VIN).
+    // Логичнее показывать читаемое название — марка/модель/госномер.
+    public function getTitle(): string
+    {
+        return $this->record->display_name;
+    }
+
     protected function getHeaderActions(): array
     {
         return [

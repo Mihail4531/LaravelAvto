@@ -3,17 +3,20 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Models\Contracts\HasAvatar;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, HasAvatar
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -22,11 +25,13 @@ class User extends Authenticatable implements FilamentUser
      */
     protected $fillable = [
         'name',
+        'login',
         'email',
         'password',
         'position_id',
         'branch_id',
         'phone',
+        'avatar_path',
         'hire_date',
         'active',
     ];
@@ -87,8 +92,8 @@ class User extends Authenticatable implements FilamentUser
     public function executedServices()
     {
         return $this->belongsToMany(Service::class, 'order_service', 'executor_id')
-                    ->withPivot('order_id', 'quantity', 'price', 'sum', 'status')
-                    ->withTimestamps();
+            ->withPivot('order_id', 'quantity', 'price', 'sum', 'status')
+            ->withTimestamps();
     }
 
     // Платежи, которые принял этот сотрудник
@@ -99,12 +104,42 @@ class User extends Authenticatable implements FilamentUser
 
     /*
     |--------------------------------------------------------------------------
+    | SCOPES
+    |--------------------------------------------------------------------------
+    */
+
+    /**
+     * Исключает технический аварийный аккаунт super_admin из людских списков
+     * (исполнители, приёмщики, кассиры) — это break-glass, а не сотрудник.
+     */
+    public function scopeWithoutSuperAdmin(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('roles', fn (Builder $q) => $q->where('name', 'super_admin'));
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | ДОСТУП К ПАНЕЛИ FILAMENT
     |--------------------------------------------------------------------------
     */
     public function canAccessPanel(Panel $panel): bool
     {
-        // Разрешаем доступ только пользователям с перечисленными ролями
-        return $this->hasRole(['admin', 'receptionist', 'mechanic', 'accountant']);
+        // Доступ к панели — для super_admin и для любой роли,
+        // получившей permission 'access_admin_panel'.
+        if (! $this->active) {
+            return false;
+        }
+
+        return $this->hasRole('super_admin') || $this->can('access_admin_panel');
+    }
+
+    /**
+     * Аватар для шапки панели Filament (HasAvatar).
+     */
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar_path
+            ? Storage::disk('public')->url($this->avatar_path)
+            : null;
     }
 }

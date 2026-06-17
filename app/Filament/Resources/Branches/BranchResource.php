@@ -7,19 +7,25 @@ use App\Filament\Resources\Branches\Pages\EditBranch;
 use App\Filament\Resources\Branches\Pages\ListBranches;
 use App\Filament\Resources\Branches\Schemas\BranchForm;
 use App\Filament\Resources\Branches\Tables\BranchesTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Branch;
 use BackedEnum;
 use Filament\Resources\Resource;
-use Filament\Tables\Components\Tab;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use UnitEnum; // ← добавить для корректного типа
+use UnitEnum;
+
+// ← добавить для корректного типа
 
 class BranchResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = Branch::class;
 
     // Иконка для пункта меню
@@ -35,8 +41,9 @@ class BranchResource extends Resource
     protected static ?string $pluralModelLabel = 'Филиалы';
 
     // Группа в боковом меню – тип должен совпадать с родительским (string|UnitEnum|null)
-    protected static string|UnitEnum|null $navigationGroup = 'Филиалы';
-protected static ?int $navigationSort = 1;
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
+
+    protected static ?int $navigationSort = 8;
 
     // Поле для заголовка записи
     protected static ?string $recordTitleAttribute = 'name';
@@ -50,17 +57,20 @@ protected static ?int $navigationSort = 1;
     {
         return BranchesTable::configure($table);
     }
+
     public static function getRelations(): array
     {
         return [];
     }
- public static function getEloquentQuery(): Builder
+
+    public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
     }
+
     public static function getPages(): array
     {
         return [

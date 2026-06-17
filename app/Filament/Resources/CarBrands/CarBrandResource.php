@@ -7,23 +7,25 @@ use App\Filament\Resources\CarBrands\Pages\EditCarBrand;
 use App\Filament\Resources\CarBrands\Pages\ListCarBrands;
 use App\Filament\Resources\CarBrands\Schemas\CarBrandForm;
 use App\Filament\Resources\CarBrands\Tables\CarBrandsTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\CarBrand;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
 class CarBrandResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = CarBrand::class;
 
     // Иконка в меню
-  protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
-
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
 
     // Название пункта в меню
     protected static ?string $navigationLabel = 'Марки авто';
@@ -35,8 +37,9 @@ class CarBrandResource extends Resource
     protected static ?string $pluralModelLabel = 'Марки автомобилей';
 
     // Группа в меню
-  protected static string|UnitEnum|null $navigationGroup = 'Автомобили';
-    protected static ?int $navigationSort = 1; // марки идут первыми
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
+
+    protected static ?int $navigationSort = 3;
 
     // Поле для заголовка записи (используется в селектах и хлебных крошках)
     protected static ?string $recordTitleAttribute = 'name';

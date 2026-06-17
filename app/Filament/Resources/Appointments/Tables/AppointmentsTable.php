@@ -2,18 +2,21 @@
 
 namespace App\Filament\Resources\Appointments\Tables;
 
+use App\Models\Appointment;
+use App\Models\Car;
+use App\Models\Client;
+use App\Models\Order;
+use App\Support\BranchScope;
+use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
-
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use App\Models\Appointment;
-use Filament\Actions\Action;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Filament\Notifications\Notification;
 
 class AppointmentsTable
 {
@@ -33,7 +36,8 @@ class AppointmentsTable
                     ->searchable(),
                 TextColumn::make('branch.name')
                     ->label('Филиал')
-                    ->sortable(),
+                    ->sortable()
+                    ->visible(fn () => BranchScope::shouldShowBranchUi()),
                 TextColumn::make('timeSlot.starts_at')
                     ->label('Дата и время')
                     ->dateTime('d.m.Y H:i')
@@ -70,9 +74,24 @@ class AppointmentsTable
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([
+                SelectFilter::make('branch_id')
+                    ->label('Филиал')
+                    ->relationship('branch', 'name')
+                    ->visible(fn () => BranchScope::shouldShowBranchUi()),
                 SelectFilter::make('status')
                     ->label('Статус')
                     ->options(Appointment::statuses()),
+            ])
+            ->headerActions([
+                Action::make('export')
+                    ->label('Excel')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('gray')
+                    ->url(fn () => route('reports.appointments', [
+                        'from' => now()->startOfMonth()->format('Y-m-d'),
+                        'to' => now()->format('Y-m-d'),
+                    ]))
+                    ->openUrlInNewTab(),
             ])
             ->recordActions([
                 EditAction::make()->label('Редактировать'),
@@ -87,18 +106,43 @@ class AppointmentsTable
                     ->action(function (Appointment $record) {
                         DB::beginTransaction();
                         try {
-                            // 1. Найти или создать клиента
-                            $client = \App\Models\Client::firstOrCreate(
-                                ['phone' => $record->client_phone],
-                                [
-                                    'last_name'  => explode(' ', $record->client_name)[0] ?? '',
-                                    'first_name' => explode(' ', $record->client_name)[1] ?? '',
-                                    'middle_name' => explode(' ', $record->client_name)[2] ?? '',
-                                ]
-                            );
+                            // 1. Найти или создать клиента.
+                            // Email теперь обязателен в форме записи — заявка без него
+                            // не должна доходить до этапа. Старые заявки без email
+                            // прерываем с понятным сообщением — админу нужно дозаполнить.
+                            if (empty($record->client_email)) {
+                                throw new \RuntimeException(
+                                    'У заявки не указан email клиента. Откройте заявку, заполните поле «Email клиента» и повторите.'
+                                );
+                            }
+
+                            $email = mb_strtolower(trim($record->client_email));
+
+                            // Ищем существующего клиента по email (уникальный) ИЛИ телефону,
+                            // ВКЛЮЧАЯ удалённых: unique-индексы БД сохраняются и на мягко
+                            // удалённой строке, поэтому без withTrashed() create() упёрся бы
+                            // в дубликат. Найденного в корзине — восстанавливаем.
+                            $client = Client::withTrashed()
+                                ->where(fn ($q) => $q->where('email', $email)->orWhere('phone', $record->client_phone))
+                                ->first();
+
+                            if ($client && $client->trashed()) {
+                                $client->restore();
+                            }
+
+                            if (! $client) {
+                                $parts = preg_split('/\s+/', trim($record->client_name), 3);
+                                $client = Client::create([
+                                    'phone' => $record->client_phone,
+                                    'last_name' => $parts[0] ?? '',
+                                    'first_name' => $parts[1] ?? '',
+                                    'middle_name' => $parts[2] ?? '',
+                                    'email' => $email,
+                                ]);
+                            }
 
                             // 2. Найти или создать автомобиль (привязанный к клиенту)
-                            $car = \App\Models\Car::firstOrCreate(
+                            $car = Car::firstOrCreate(
                                 [
                                     'client_id' => $client->id,
                                     'car_brand_id' => $record->car_brand_id,
@@ -110,10 +154,10 @@ class AppointmentsTable
                             );
 
                             // 3. Создать заказ-наряд
-                            $order = \App\Models\Order::create([
+                            $order = Order::create([
                                 'branch_id' => $record->branch_id,
                                 'client_id' => $client->id,
-                                'car_id'    => $car->id,
+                                'car_id' => $car->id,
                                 'receiver_id' => Auth::id(),
                                 'status' => 'new',
                                 'total_amount' => 0,
@@ -144,14 +188,14 @@ class AppointmentsTable
 
                             Notification::make()
                                 ->success()
-                                ->title('Заявка преобразована в заказ №' . $order->id)
+                                ->title('Заявка преобразована в заказ №'.$order->id)
                                 ->send();
                         } catch (\Exception $e) {
                             DB::rollBack();
                             Notification::make()
                                 ->danger()
                                 ->title('Ошибка')
-                                ->body('Не удалось преобразовать заявку: ' . $e->getMessage())
+                                ->body('Не удалось преобразовать заявку: '.$e->getMessage())
                                 ->send();
                         }
                     }),

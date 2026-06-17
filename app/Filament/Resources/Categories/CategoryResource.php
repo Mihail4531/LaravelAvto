@@ -7,6 +7,8 @@ use App\Filament\Resources\Categories\Pages\EditCategory;
 use App\Filament\Resources\Categories\Pages\ListCategories;
 use App\Filament\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Resources\Categories\Tables\CategoriesTable;
+use App\Filament\Traits\HiddenFromSidebarNav;
+use App\Filament\Traits\ResourcePermissions;
 use App\Models\Category;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -16,14 +18,23 @@ use UnitEnum;
 
 class CategoryResource extends Resource
 {
+    use HiddenFromSidebarNav;
+    use ResourcePermissions;
+
     protected static ?string $model = Category::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-tag';
+
     protected static ?string $navigationLabel = 'Категории услуг';
+
     protected static ?string $modelLabel = 'категорию';
+
     protected static ?string $pluralModelLabel = 'Категории услуг';
-    protected static string|UnitEnum|null $navigationGroup = 'Сервис';
-    protected static ?int $navigationSort = 1;
+
+    protected static string|UnitEnum|null $navigationGroup = 'Настройки';
+
+    protected static ?int $navigationSort = 2;
+
     protected static ?string $recordTitleAttribute = 'name';
 
     public static function form(Schema $schema): Schema

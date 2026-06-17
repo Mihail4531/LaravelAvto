@@ -14,7 +14,7 @@ class LatestOrdersWidget extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected static ?string $heading = 'Последние заказы';
+    protected static ?string $heading = 'Последние заказ-наряды';
 
     public function table(Table $table): Table
     {
@@ -42,11 +42,11 @@ class LatestOrdersWidget extends BaseWidget
                 BadgeColumn::make('status')
                     ->label('Статус')
                     ->colors([
-                        'gray'    => 'new',
+                        'gray' => 'new',
                         'warning' => 'in_progress',
                         'success' => 'completed',
                         'primary' => 'closed',
-                        'danger'  => 'cancelled',
+                        'danger' => 'cancelled',
                     ])
                     ->formatStateUsing(fn ($state) => Order::statuses()[$state] ?? $state),
 

@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Appointments\Pages;
 
 use App\Filament\Resources\Appointments\AppointmentResource;
+use App\Models\Appointment;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Appointment;
 
 class ListAppointments extends ListRecords
 {
@@ -16,7 +16,8 @@ class ListAppointments extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Создать заявку'), // но обычно не используется
+            CreateAction::make()->label('Создать заявку') // напр. при записи по телефону
+                ->visible(fn () => AppointmentResource::canCreate()),
         ];
     }
 

@@ -1,0 +1,404 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* ════════════════════════════════════════════════════════════════════
+   ЭКРАН ВХОДА — премиальная мастерская: тёмная сталь + кобальтовый акцент.
+   Без «киберфона» (сетки/глоу-шара): чистый градиент, мягкий свет-прожектор
+   и виньетка для глубины. Скоуп на .fi-simple-layout — основную панель не
+   трогает. Логин всегда тёмный. Анимации делают форму «живой».
+═══════════════════════════════════════════════════════════════════════ */
+
+.fi-simple-layout {
+    position: relative;
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+/* Тёмный «стальной» фон — только в тёмной теме. В светлой теме экран входа
+   следует обычной светлой теме Filament (светлый фон, белая карточка). */
+.dark .fi-simple-layout {
+    background:
+        radial-gradient(130% 90% at 50% -30%, #1c222b 0%, transparent 60%),
+        linear-gradient(180deg, #12161c 0%, #0c0f14 60%, #090b0e 100%) !important;
+}
+
+/* Мягкий свет-прожектор на карточку + виньетка по краям — глубина без сетки */
+.dark .fi-simple-layout::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    pointer-events: none;
+    background:
+        radial-gradient(50% 42% at 50% 34%, rgba(140, 160, 185, 0.08) 0%, transparent 72%),
+        radial-gradient(150% 130% at 50% 48%, transparent 52%, rgba(0, 0, 0, 0.5) 100%);
+}
+
+.fi-simple-main-ctn {
+    position: relative;
+    z-index: 1;
+}
+
+/* Появление карточки — в обеих темах */
+.fi-simple-layout .fi-simple-main {
+    position: relative;
+    overflow: hidden;
+    animation: aisCardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ── Карточка входа — полированная сталь (только тёмная тема) ──────────── */
+.dark .fi-simple-layout .fi-simple-main {
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, transparent 38%),
+        linear-gradient(165deg, #1a1f26 0%, #0e1116 100%) !important;
+    border: 1px solid #262d36 !important;
+    border-radius: 18px !important;
+    box-shadow:
+        0 1px 0 0 rgba(255, 255, 255, 0.04) inset,
+        0 34px 70px -26px rgba(0, 0, 0, 0.82),
+        0 8px 22px -12px rgba(0, 0, 0, 0.55) !important;
+    color: #c5ccd5;
+}
+
+/* Металлический блик-хайлайт по верхней кромке (не глоу) */
+.dark .fi-simple-layout .fi-simple-main::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22) 50%, transparent);
+}
+
+/* ── Шапка карточки + фирменный бейдж «A» ─────────────────────────────── */
+.fi-simple-layout .fi-simple-header {
+    text-align: center;
+}
+
+
+
+/* Логотип и заголовки — размеры/анимация в обеих темах, светлый ЦВЕТ
+   текста только в тёмной теме (в светлой Filament сам красит их тёмными). */
+.fi-simple-layout .fi-logo {
+    justify-content: center;
+    height: auto !important;
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.01em;
+    animation: aisRise 0.6s 0.3s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dark .fi-simple-layout .fi-logo {
+    color: #eaeef3 !important;
+}
+
+.fi-simple-layout .fi-simple-header-heading {
+    font-size: 0.95rem !important;
+    font-weight: 500 !important;
+    animation: aisRise 0.6s 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dark .fi-simple-layout .fi-simple-header-heading {
+    color: #c5ccd5 !important;
+}
+
+.fi-simple-layout .fi-simple-header-subheading {
+    animation: aisRise 0.6s 0.46s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+.dark .fi-simple-layout .fi-simple-header-subheading,
+.dark .fi-simple-layout .fi-simple-header-subheading * {
+    color: #8c95a0 !important;
+}
+
+/* Подписи полей — светлыми делаем ТОЛЬКО в тёмной теме. В светлой Filament
+   сам выводит их тёмными и читаемыми. Класс лейбла в этой версии —
+   .fi-fo-field-label. */
+.dark .fi-simple-layout .fi-fo-field-label,
+.dark .fi-simple-layout .fi-fo-field-label *,
+.dark .fi-simple-layout label,
+.dark .fi-simple-layout label * {
+    color: #c5ccd5 !important;
+    -webkit-text-fill-color: #c5ccd5 !important;
+    font-weight: 600;
+}
+
+/* Поля — ступенчатое появление (обе темы) */
+.fi-simple-layout .fi-fo-field-wrp {
+    animation: aisRise 0.55s both cubic-bezier(0.16, 1, 0.3, 1);
+}
+.fi-simple-layout .fi-fo-field-wrp:nth-of-type(1) {
+    animation-delay: 0.46s;
+}
+.fi-simple-layout .fi-fo-field-wrp:nth-of-type(2) {
+    animation-delay: 0.56s;
+}
+.fi-simple-layout .fi-fo-field-wrp:nth-of-type(3) {
+    animation-delay: 0.66s;
+}
+
+/* ── Поля ввода — тёмная сталь (ТОЛЬКО тёмная тема). В светлой теме поля
+   остаются стандартными светлыми Filament, текст в них тёмный-читаемый. ── */
+.dark .fi-simple-layout .fi-input-wrp {
+    background-color: #0b0d10 !important;
+    border-radius: 10px !important;
+    box-shadow: inset 0 0 0 1px #262d36 !important;
+    transition:
+        box-shadow 0.25s ease,
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        background-color 0.25s ease;
+}
+
+.dark .fi-simple-layout .fi-input-wrp:hover {
+    box-shadow: inset 0 0 0 1px #353d47 !important;
+}
+
+.dark .fi-simple-layout .fi-input-wrp:focus-within {
+    transform: translateY(-1px);
+    box-shadow:
+        inset 0 0 0 1px #1a6dff,
+        0 8px 22px -10px rgba(26, 109, 255, 0.4) !important;
+}
+
+.dark .fi-simple-layout .fi-input,
+.dark .fi-simple-layout input {
+    color: #eaeef3 !important;
+    -webkit-text-fill-color: #eaeef3 !important;
+    background-color: transparent !important;
+}
+
+.dark .fi-simple-layout .fi-input::placeholder,
+.dark .fi-simple-layout input::placeholder {
+    color: #7c8591 !important;
+    -webkit-text-fill-color: #7c8591 !important;
+}
+
+/* Автозаполнение браузера в тёмной теме: тёмный фон + светлый текст */
+.dark .fi-simple-layout input:-webkit-autofill,
+.dark .fi-simple-layout input:-webkit-autofill:hover,
+.dark .fi-simple-layout input:-webkit-autofill:focus {
+    -webkit-text-fill-color: #eaeef3 !important;
+    -webkit-box-shadow: 0 0 0 1000px #0b0d10 inset !important;
+    caret-color: #eaeef3;
+}
+
+.dark .fi-simple-layout .fi-input-wrp .fi-icon {
+    color: #7c8591 !important;
+    transition: color 0.25s ease;
+}
+.dark .fi-simple-layout .fi-input-wrp:focus-within .fi-icon {
+    color: #6fa8ff !important;
+}
+
+/* ── Кнопка «Войти» — кобальт со скользящим бликом ────────────────────── */
+.fi-simple-layout .fi-btn {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(150deg, #3d8bff, #0b57e0) !important;
+    color: #fff !important;
+    border: 0 !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.02em;
+    box-shadow: 0 12px 28px -12px rgba(11, 87, 224, 0.7) !important;
+    transition:
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.25s,
+        filter 0.25s;
+    animation: aisFade 0.6s 0.72s both;
+}
+
+.fi-simple-layout .fi-btn::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -125%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transition: left 0.6s ease;
+}
+
+.fi-simple-layout .fi-btn:hover {
+    transform: translateY(-2px);
+    filter: brightness(1.06);
+    box-shadow: 0 18px 40px -10px rgba(11, 87, 224, 0.85) !important;
+}
+.fi-simple-layout .fi-btn:hover::after {
+    left: 130%;
+}
+.fi-simple-layout .fi-btn:active {
+    transform: translateY(0) scale(0.99);
+}
+
+/* Ссылки и чекбокс — кобальт */
+.fi-simple-layout .fi-link {
+    color: #6fa8ff !important;
+    transition: color 0.2s ease;
+}
+.fi-simple-layout .fi-link:hover {
+    color: #a6c8ff !important;
+}
+.fi-simple-layout .fi-checkbox-input:checked {
+    background-color: #1a6dff !important;
+    border-color: #1a6dff !important;
+}
+
+/* ── Анимации ─────────────────────────────────────────────────────────── */
+@keyframes aisCardIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.99);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes aisRise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes aisFade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
+@keyframes aisBadgeIn {
+    0% {
+        opacity: 0;
+        transform: translateY(10px) scale(0.82) rotate(-5deg);
+    }
+    60% {
+        opacity: 1;
+    }
+    100% {
+        opacity: 1;
+        transform: none;
+    }
+}
+@keyframes aisFloat {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-3px);
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   СВЕТЛАЯ ТЕМА ПАНЕЛИ: смягчаем чисто-белый фон — мягкая сталь вместо
+   #fff, чтобы не «выедало глаза». Карточки, сайдбар и шапку оставляем
+   светлыми, поэтому они выделяются над фоном. Тёмную тему (html.dark)
+   не трогаем.
+═══════════════════════════════════════════════════════════════════════ */
+html:not(.dark) .fi-body {
+    background-color: #e7ebf1 !important;
+}
+
+/* Основная область контента — прозрачная, чтобы сквозь неё был виден
+   смягчённый фон body (в некоторых версиях .fi-main красит белым). */
+html:not(.dark) .fi-main {
+    background-color: transparent !important;
+}
+
+/* Карточные поверхности (топбар, сайдбар, секции формы, таблицы, виджеты,
+   модалки, выпадашки) — мягкий off-white вместо чисто-белого, но чуть
+   светлее фона, чтобы сохранялось отделение слоёв. */
+html:not(.dark) .fi-topbar,
+html:not(.dark) .fi-topbar > nav,
+html:not(.dark) .fi-sidebar,
+html:not(.dark) .fi-sidebar-nav,
+html:not(.dark) .fi-section,
+html:not(.dark) .fi-section-content-ctn,
+html:not(.dark) .fi-fo-tabs,
+html:not(.dark) .fi-ta,
+html:not(.dark) .fi-ta-ctn,
+html:not(.dark) .fi-ta-content,
+html:not(.dark) .fi-wi,
+html:not(.dark) .fi-modal-window,
+html:not(.dark) .fi-dropdown-panel {
+    background-color: #f4f6f9 !important;
+}
+
+/* Шапка таблицы (фильтры/поиск) и строки заголовка — в тон карточке,
+   чтобы белая полоса сверху таблицы не выбивалась. */
+html:not(.dark) .fi-ta-header-ctn,
+html:not(.dark) .fi-ta-header {
+    background-color: #f4f6f9 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-simple-layout .fi-simple-main,
+    .fi-simple-layout .fi-simple-header::before,
+    .fi-simple-layout .fi-logo,
+    .fi-simple-layout .fi-simple-header-heading,
+    .fi-simple-layout .fi-simple-header-subheading,
+    .fi-simple-layout .fi-fo-field-wrp,
+    .fi-simple-layout .fi-btn {
+        animation: none !important;
+    }
+    .fi-simple-layout .fi-btn::after {
+        display: none;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   КОЛОКОЛЬЧИК УВЕДОМЛЕНИЙ — пока есть непрочитанные, делаем его заметным:
+   красный пульсирующий счётчик + периодическое «покачивание» колокольчика,
+   и подсветка непрочитанных записей в самом списке. Работает в обеих темах.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* Счётчик непрочитанных — красный, жирный, с пульсирующим ореолом */
+.fi-topbar-database-notifications-btn .fi-badge {
+    background-color: #e11d48 !important;
+    color: #fff !important;
+    font-weight: 700 !important;
+    animation: aisBadgePulse 1.8s ease-out infinite;
+}
+@keyframes aisBadgePulse {
+    0%   { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.55); }
+    70%  { box-shadow: 0 0 0 7px rgba(225, 29, 72, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(225, 29, 72, 0); }
+}
+
+/* Пока есть непрочитанные (бейдж присутствует) — сам колокольчик красный
+   и периодически коротко «звенит», притягивая взгляд. */
+.fi-topbar-database-notifications-btn:has(.fi-icon-btn-badge-ctn) {
+    color: #e11d48 !important;
+}
+.fi-topbar-database-notifications-btn:has(.fi-icon-btn-badge-ctn) svg {
+    color: #e11d48 !important;
+    transform-origin: 50% 12%;
+    animation: aisBellRing 4s ease-in-out infinite;
+}
+@keyframes aisBellRing {
+    0%, 50%, 100% { transform: rotate(0); }
+    54% { transform: rotate(14deg); }
+    58% { transform: rotate(-12deg); }
+    62% { transform: rotate(9deg); }
+    66% { transform: rotate(-7deg); }
+    70% { transform: rotate(4deg); }
+    74% { transform: rotate(0); }
+}
+
+/* Непрочитанные записи в списке — акцентная полоса слева и лёгкая заливка */
+.fi-no-notification-unread-ctn {
+    border-inline-start: 3px solid #e11d48 !important;
+    background-color: rgba(225, 29, 72, 0.06) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-topbar-database-notifications-btn .fi-badge,
+    .fi-topbar-database-notifications-btn:has(.fi-icon-btn-badge-ctn) svg {
+        animation: none !important;
+    }
+}

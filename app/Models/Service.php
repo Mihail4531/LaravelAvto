@@ -11,7 +11,7 @@ class Service extends Model
 
     protected $fillable = [
         'name', 'slug', 'description', 'category_id', 'duration_minutes',
-        'price', 'image', 'active', 'sort_order'
+        'price', 'image', 'active', 'sort_order',
     ];
 
     protected $casts = [
@@ -22,5 +22,12 @@ class Service extends Model
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function orders()
+    {
+        return $this->belongsToMany(Order::class, 'order_service')
+            ->withPivot('executor_id', 'quantity', 'price', 'sum', 'status')
+            ->withTimestamps();
     }
 }

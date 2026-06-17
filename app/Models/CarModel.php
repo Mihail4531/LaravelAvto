@@ -4,23 +4,22 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;   // ← добавить
-use Illuminate\Support\Str;                     // опционально, для генерации slug
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class CarModel extends Model
 {
-    use HasFactory, SoftDeletes;                 // ← добавить SoftDeletes
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'car_brand_id',
         'name',
-        'slug',          // ← добавить slug
-        'active'
+        'slug',
+        'active',
     ];
 
     protected $casts = [
         'active' => 'boolean',
-        'deleted_at' => 'datetime', // не обязательно, но для порядка
+        'deleted_at' => 'datetime',
     ];
 
     public function brand()
@@ -28,6 +27,8 @@ class CarModel extends Model
         return $this->belongsTo(CarBrand::class, 'car_brand_id');
     }
 
-    // Опционально: автоматическая генерация slug при создании/обновлении
-   
+    public function parts()
+    {
+        return $this->belongsToMany(Part::class, 'car_model_part');
+    }
 }

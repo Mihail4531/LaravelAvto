@@ -12,6 +12,13 @@ class EditClient extends EditRecord
 {
     protected static string $resource = ClientResource::class;
 
+    // По умолчанию заголовок берётся из recordTitleAttribute (телефон).
+    // Для клиента логичнее показывать ФИО.
+    public function getTitle(): string
+    {
+        return $this->record->full_name ?: 'Клиент';
+    }
+
     protected function getHeaderActions(): array
     {
         return [

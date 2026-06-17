@@ -3,9 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Appointment;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 
@@ -16,6 +14,11 @@ class LatestAppointmentsWidget extends BaseWidget
     protected int|string|array $columnSpan = 'full';
 
     protected static ?string $heading = 'Новые заявки';
+
+    public static function canView(): bool
+    {
+        return true;
+    }
 
     public function table(Table $table): Table
     {
@@ -43,15 +46,17 @@ class LatestAppointmentsWidget extends BaseWidget
                 TextColumn::make('carModel.name')
                     ->label('Модель'),
 
-                BadgeColumn::make('status')
+                TextColumn::make('status')
                     ->label('Статус')
-                    ->colors([
-                        'info'    => 'new',
-                        'warning' => 'confirmed',
-                        'danger'  => 'rejected',
-                        'success' => 'converted',
-                        'gray'    => 'cancelled',
-                    ])
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'new' => 'info',
+                        'confirmed' => 'warning',
+                        'rejected' => 'danger',
+                        'converted' => 'success',
+                        'cancelled' => 'gray',
+                        default => 'gray',
+                    })
                     ->formatStateUsing(fn ($state) => Appointment::statuses()[$state] ?? $state),
 
                 TextColumn::make('created_at')

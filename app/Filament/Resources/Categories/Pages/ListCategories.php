@@ -3,11 +3,11 @@
 namespace App\Filament\Resources\Categories\Pages;
 
 use App\Filament\Resources\Categories\CategoryResource;
+use App\Models\Category;
 use Filament\Actions\CreateAction;
 use Filament\Resources\Pages\ListRecords;
 use Filament\Schemas\Components\Tabs\Tab;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\Category;
 
 class ListCategories extends ListRecords
 {
@@ -16,7 +16,8 @@ class ListCategories extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Создать категорию'),
+            CreateAction::make()->label('Добавить категорию')
+                ->visible(fn () => CategoryResource::canCreate()),
         ];
     }
 

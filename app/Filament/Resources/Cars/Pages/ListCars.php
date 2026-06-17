@@ -15,7 +15,8 @@ class ListCars extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Добавить автомобиль'),
+            CreateAction::make()->label('Добавить автомобиль')
+                ->visible(fn () => CarResource::canCreate()),
         ];
     }
 
@@ -23,8 +24,8 @@ class ListCars extends ListRecords
     {
         return [
             'all' => Tab::make('Все')
-                ->badge(fn () => CarResource::getEloquentQuery()->count())
-                ->modifyQueryUsing(fn (Builder $query) => $query),
+                ->badge(fn () => CarResource::getEloquentQuery()->withoutTrashed()->count())
+                ->modifyQueryUsing(fn (Builder $query) => $query->withoutTrashed()),
             'deleted' => Tab::make('Удалённые')
                 ->badge(fn () => CarResource::getEloquentQuery()->onlyTrashed()->count())
                 ->modifyQueryUsing(fn (Builder $query) => $query->onlyTrashed()),

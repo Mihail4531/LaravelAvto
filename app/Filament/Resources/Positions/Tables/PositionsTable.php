@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Positions\Tables;
 
+use App\Support\AccessLabels;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -19,9 +20,11 @@ class PositionsTable
                     ->label('Должность')
                     ->searchable()
                     ->sortable(),
-                TextColumn::make('hourly_rate')
-                    ->label('Ставка за час (₽)')
-                    ->money('RUB')
+                TextColumn::make('default_role')
+                    ->label('Роль доступа')
+                    ->formatStateUsing(fn (?string $state) => $state ? AccessLabels::role($state) : '—')
+                    ->badge()
+                    ->color(fn (?string $state) => $state ? 'primary' : 'gray')
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Создана')

@@ -11,27 +11,34 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class ClientsTable
 {
     public static function configure(Table $table): Table
     {
         return $table
+            // Подгружаем авто с марками/моделями для колонки «Автомобили» (без N+1)
+            ->modifyQueryUsing(fn (Builder $query) => $query->with(['cars.brand', 'cars.model']))
             ->columns([
-                TextColumn::make('last_name')
-                    ->label('Фамилия')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('first_name')
-                    ->label('Имя')
-                    ->searchable()
-                    ->sortable(),
-                TextColumn::make('middle_name')
-                    ->label('Отчество')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('full_name')
+                    ->label('ФИО')
+                    // full_name — аксессор (trim-склейка), не колонка: ищем по частям,
+                    // сортируем по реальным полям.
+                    ->searchable(query: fn (Builder $query, string $search) => $query
+                        ->where('last_name', 'like', "%{$search}%")
+                        ->orWhere('first_name', 'like', "%{$search}%")
+                        ->orWhere('middle_name', 'like', "%{$search}%"))
+                    ->sortable(['last_name', 'first_name', 'middle_name']),
+                TextColumn::make('cars.display_name')
+                    ->label('Автомобили')
+                    ->badge()
+                    ->color('gray')
+                    ->listWithLineBreaks()
+                    ->limitList(3)
+                    ->expandableLimitedList()
+                    ->placeholder('— нет авто —'),
                 TextColumn::make('phone')
                     ->label('Телефон')
                     ->searchable()
@@ -56,9 +63,6 @@ class ClientsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
-            ->filters([
-                TrashedFilter::make()->label('В корзине'),
-            ])
             ->recordActions([
                 EditAction::make()->label('Редактировать'),
                 DeleteAction::make()->label('Удалить'),
