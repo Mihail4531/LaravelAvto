@@ -336,9 +336,11 @@
                     <p class="text-ink-400 text-[14px] leading-relaxed max-w-md mb-6">
                         Сейчас нет свободных окон. Позвоните — поможем подобрать удобное время{{ $this->hasBranchChoice ? ' или предложим другой филиал' : '' }}.
                     </p>
-                    <a href="tel:+79616913023" class="inline-flex items-center gap-3 px-5 py-3 border border-ink-700 hover:border-ink-500 hover:bg-ink-800 transition-colors text-[13px] font-semibold">
-                        <span class="font-mono">+7 961 691-30-23</span>
+                    @if($contact->phone)
+                    <a href="{{ $contact->telHref() }}" class="inline-flex items-center gap-3 px-5 py-3 border border-ink-700 hover:border-ink-500 hover:bg-ink-800 transition-colors text-[13px] font-semibold">
+                        <span class="font-mono">{{ $contact->phone }}</span>
                     </a>
+                    @endif
                 </div>
                 @else
                 <div x-data="{ activeDate: '{{ $this->timeSlots->keys()->first() }}' }">
@@ -725,9 +727,11 @@
         </div>
 
         {{-- Помощь --}}
+        @if($contact->phone)
         <div class="mt-10 text-[12px] text-ink-400">
-            Возникли сложности? <a href="tel:+79616913023" class="text-ink-100 font-mono hover:text-primary-400 transition-colors">+7 961 691-30-23</a>
+            Возникли сложности? <a href="{{ $contact->telHref() }}" class="text-ink-100 font-mono hover:text-primary-400 transition-colors">{{ $contact->phone }}</a>
         </div>
+        @endif
 
         @endif
 

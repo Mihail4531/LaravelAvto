@@ -32,6 +32,7 @@ class RolesAndPermissionsSeeder extends Seeder
         'car_model',
         'gallery_item',
         'part_request',
+        'contact_info',
         'role',
     ];
 

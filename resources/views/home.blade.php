@@ -113,10 +113,12 @@
                         </svg>
                     </a>
 
+                    @if($contact->phone)
                     <div class="mt-6 pt-6 border-t border-ink-700 flex items-center justify-between hero-rise" style="--i:6">
                         <span class="text-ink-400 text-[13px]">Или позвоните</span>
-                        <a href="tel:+79616913023" class="font-mono text-[15px] text-ink-100 hover:text-primary-500 transition-colors">+7 961 691-30-23</a>
+                        <a href="{{ $contact->telHref() }}" class="font-mono text-[15px] text-ink-100 hover:text-primary-500 transition-colors">{{ $contact->phone }}</a>
                     </div>
+                    @endif
                 </div>
             </aside>
         </div>
@@ -845,11 +847,13 @@
                             <span class="text-[13px] sm:text-[14px] uppercase tracking-wider">Записаться онлайн</span>
                             <svg class="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </a>
-                        <a href="tel:+79616913023"
+                        @if($contact->phone)
+                        <a href="{{ $contact->telHref() }}"
                            class="group inline-flex items-center justify-between gap-3 sm:gap-6 px-5 sm:px-7 py-4 sm:py-5 bg-black/[0.03] hover:bg-black/[0.06] border border-ink-700 text-ink-100 rounded-none font-bold transition-colors">
                             <span class="text-[13px] sm:text-[14px] uppercase tracking-wider">Позвонить</span>
-                            <span class="font-mono text-[13px] sm:text-[14px] text-primary-400 whitespace-nowrap">+7 961 691-30-23</span>
+                            <span class="font-mono text-[13px] sm:text-[14px] text-primary-400 whitespace-nowrap">{{ $contact->phone }}</span>
                         </a>
+                        @endif
                     </div>
                 </div>
             </div>

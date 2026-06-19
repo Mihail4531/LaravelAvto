@@ -6,6 +6,7 @@ use App\Filament\Resources\Branches\BranchResource;
 use App\Filament\Resources\CarBrands\CarBrandResource;
 use App\Filament\Resources\CarModels\CarModelResource;
 use App\Filament\Resources\Categories\CategoryResource;
+use App\Filament\Resources\ContactInfos\ContactInfoResource;
 use App\Filament\Resources\GalleryItems\GalleryItemResource;
 use App\Filament\Resources\Positions\PositionResource;
 use App\Filament\Resources\Services\ServiceResource;
@@ -63,6 +64,7 @@ class TopNavigation
                     BranchResource::class,
                     TimeSlotResource::class,
                     GalleryItemResource::class,
+                    ContactInfoResource::class,
                 ],
             ],
         ];
