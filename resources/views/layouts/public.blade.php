@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'АвтоСервис') — Ремонт и обслуживание автомобилей</title>
+    <title>@yield('title', 'Mobile 1') — Ремонт и обслуживание автомобилей</title>
     <meta name="description" content="@yield('description', 'Современный автосервис полного цикла. Запись онлайн, гарантия на работы, опытные мастера.')">
+
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <link rel="apple-touch-icon" href="{{ asset('favicon.svg') }}">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -21,8 +24,8 @@
 
 {{-- ═════════════════════════ ЛОАДЕР («прогрев двигателя») ═════════════════════════ --}}
 <div id="app-loader">
-    <img src="{{ asset('storage/logo/logo.svg') }}" alt="АвтоСервис" class="loader-logo">
-    <div class="loader-brand">АвтоСервис</div>
+    <img src="{{ asset('storage/logo/logo.svg') }}" alt="Mobile 1" class="loader-logo">
+    <div class="loader-brand">Mobile 1</div>
     <div class="loader-track"><div class="loader-fill" id="loader-fill"></div></div>
     <div class="loader-counter"><span id="loader-counter">0</span>%</div>
 </div>
@@ -59,6 +62,10 @@
     window.addEventListener('load', finish);
     // Подстраховка: скрыть максимум через 3.5с, даже если что-то не догрузилось
     setTimeout(finish, 3500);
+    // bfcache: при возврате/переходе страница может восстановиться из кэша уже
+    // «загруженной» — событие load не повторится. Снимаем лоадер и тут, иначе
+    // он залипнет поверх страницы и скроет шапку.
+    window.addEventListener('pageshow', function (e) { if (e.persisted) finish(); });
 })();
 </script>
 
@@ -80,16 +87,19 @@
     class="fixed top-0 inset-x-0 z-50 transition-shadow duration-300"
     :class="(scrolled || mobileOpen) ? 'shadow-[0_8px_30px_-16px_rgba(13,30,55,0.35)]' : ''">
 
-    {{-- Полоса шапки --}}
-    <div class="relative z-20 backdrop-blur-md border-b transition-colors duration-300"
-         :class="(scrolled || mobileOpen) ? 'bg-white border-ink-700' : 'bg-white/85 border-transparent'">
+    {{-- Полоса шапки — сплошной белый фон (без backdrop-blur: на мобильных
+         фиксированный элемент с backdrop-filter после навигации/скролла
+         перестаёт перерисовываться, и содержимое шапки, включая бургер,
+         пропадает; к тому же блюр-«стекло» запрещён в DESIGN.md). --}}
+    <div class="relative z-20 border-b transition-colors duration-300"
+         :class="(scrolled || mobileOpen) ? 'bg-white border-ink-700' : 'bg-white border-transparent'">
         <div class="max-w-[1400px] mx-auto px-5 lg:px-10">
             <div class="flex items-center justify-between transition-[height] duration-300 ease-out"
                  :class="scrolled ? 'h-[60px] lg:h-[68px]' : 'h-[68px] lg:h-[80px]'">
 
                 {{-- Логотип --}}
                 <a href="{{ url('/') }}" class="flex items-center group shrink-0" aria-label="На главную">
-                    <img src="{{ asset('storage/logo/logo.svg') }}" alt="АвтоСервис"
+                    <img src="{{ asset('storage/logo/logo.svg') }}" alt="Mobile 1"
                          class="w-auto block transition-all duration-300 group-hover:scale-105"
                          :class="scrolled ? 'h-6 lg:h-7' : 'h-7 lg:h-8'">
                 </a>
@@ -136,7 +146,7 @@
          x-transition:leave="transition-opacity ease-in duration-200"
          x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
          @click="mobileOpen = false"
-         class="lg:hidden fixed inset-0 z-0 bg-ink-950/50 backdrop-blur-[2px]"></div>
+         class="lg:hidden fixed inset-0 z-0 bg-ink-950/60"></div>
 
     {{-- Мобильное меню: сплошной лист, выезжает из-под шапки --}}
     <div id="mobile-nav" x-show="mobileOpen" x-cloak
@@ -185,12 +195,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
                     </svg>
                 </a>
-                <a href="tel:+78000000000"
+                <a href="tel:+79616913023"
                    class="mt-3 flex items-center justify-center gap-2 py-2.5 text-[14px] font-semibold text-ink-300 hover:text-primary-600 transition-colors">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/>
                     </svg>
-                    +7 800 000 00 00
+                    +7 961 691-30-23
                 </a>
             </div>
         </div>
@@ -220,7 +230,7 @@
             </div>
             <div class="col-span-12 lg:col-span-5 lg:pt-10 flex items-end">
                 <p class="text-ink-300 text-[16px] leading-relaxed max-w-md">
-                    Два клика — и время забронировано. Без звонков, без ожидания на линии. Подтверждение придёт на email.
+                    Два клика — и заявка с выбранным временем уходит в сервис.
                 </p>
             </div>
         </div>
@@ -232,7 +242,7 @@
             <div class="col-span-12 lg:col-span-5">
                 <div class="mb-6">
                     <a href="{{ url('/') }}" class="inline-flex">
-                        <img src="{{ asset('storage/logo/logo.svg') }}" alt="АвтоСервис" class="h-9 w-auto block">
+                        <img src="{{ asset('storage/logo/logo.svg') }}" alt="Mobile 1" class="h-9 w-auto block">
                     </a>
                 </div>
                 <p class="text-ink-300 text-[14px] leading-relaxed max-w-md mb-8">
@@ -281,11 +291,11 @@
                 <ul class="space-y-4">
                     <li>
                         <span class="text-ink-500 text-[11px] uppercase tracking-wider block mb-1">Телефон</span>
-                        <a href="tel:+78000000000" class="text-ink-100 font-mono text-[16px] hover:text-primary-400 transition-colors">+7 800 000 00 00</a>
+                        <a href="tel:+79616913023" class="text-ink-100 font-mono text-[16px] hover:text-primary-400 transition-colors">+7 961 691-30-23</a>
                     </li>
                     <li>
                         <span class="text-ink-500 text-[11px] uppercase tracking-wider block mb-1">Email</span>
-                        <a href="mailto:info@autoservice.ru" class="text-ink-100 text-[14px] hover:text-primary-400 transition-colors">info@autoservice.ru</a>
+                        <a href="mailto:mobileoneavto@mail.ru" class="text-ink-100 text-[14px] hover:text-primary-400 transition-colors">mobileoneavto@mail.ru</a>
                     </li>
                     <li>
                         <span class="text-ink-500 text-[11px] uppercase tracking-wider block mb-1">Часы работы</span>
@@ -297,7 +307,7 @@
 
         {{-- Низ футера --}}
         <div class="pt-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[12px] text-ink-500">
-            <div>© {{ date('Y') }} АвтоСервис. Все права защищены.</div>
+            <div>© {{ date('Y') }} Mobile 1. Все права защищены.</div>
             <div class="flex items-center gap-6">
                 <a href="#" class="hover:text-primary-400 transition-colors">Политика конфиденциальности</a>
                 <a href="#" class="hover:text-primary-400 transition-colors">Договор-оферта</a>

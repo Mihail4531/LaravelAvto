@@ -4,12 +4,14 @@ namespace App\Filament\Resources\Orders\RelationManagers;
 
 use App\Models\Part;
 use App\Models\PartMovement;
-use Filament\Actions\AttachAction;
-use Filament\Actions\DeleteAction;
+use App\Models\PartRequest;
+use Filament\Actions\Action;
+use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Placeholder;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\IconColumn;
@@ -62,6 +64,7 @@ class PartsRelationManager extends RelationManager
 
     public function form(Schema $schema): Schema
     {
+        // Форма правки уже добавленной (= выданной) позиции: количество и цена.
         return $schema
             ->components([
                 TextInput::make('quantity')
@@ -93,10 +96,6 @@ class PartsRelationManager extends RelationManager
                     ->disabled()
                     ->dehydrated(true)
                     ->default(0),
-
-                Toggle::make('is_issued')
-                    ->label('Выдано клиенту')
-                    ->default(false),
             ]);
     }
 
@@ -136,154 +135,38 @@ class PartsRelationManager extends RelationManager
                 EditAction::make()
                     ->label('Изменить')
                     ->visible(fn () => $this->getOwnerRecord()->isOpen())
-                    ->using(function (Model $record, array $data): Model {
-                        $oldQty = (float) $record->pivot->quantity;
-                        $oldIssued = (bool) $record->pivot->is_issued;
-                        $newQty = (float) $data['quantity'];
-                        $newIssued = (bool) ($data['is_issued'] ?? false);
-                        $orderId = $this->getOwnerRecord()->id;
-
-                        $part = Part::find($record->id);
-
-                        if (! $oldIssued && ! $newIssued) {
-                            // Количество изменилось — корректируем резерв
-                            $delta = $newQty - $oldQty;
-                            if ($delta != 0) {
-                                $part->increment('reserved_quantity', $delta);
-                                PartMovement::create([
-                                    'part_id' => $part->id,
-                                    'order_id' => $orderId,
-                                    'user_id' => auth()->id(),
-                                    'type' => $delta > 0 ? PartMovement::TYPE_RESERVE : PartMovement::TYPE_RELEASE,
-                                    'quantity' => abs($delta),
-                                    'comment' => 'Изменение количества в заказе №'.$orderId,
-                                ]);
-                            }
-                        } elseif (! $oldIssued && $newIssued) {
-                            // Выдаём: снимаем резерв, списываем со склада
-                            $part->decrement('reserved_quantity', $oldQty);
-                            $part->decrement('stock_quantity', $newQty);
-                            PartMovement::create([
-                                'part_id' => $part->id,
-                                'order_id' => $orderId,
-                                'user_id' => auth()->id(),
-                                'type' => PartMovement::TYPE_ISSUE,
-                                'quantity' => $newQty,
-                                'comment' => 'Выдача клиенту по заказу №'.$orderId,
-                            ]);
-                        } elseif ($oldIssued && ! $newIssued) {
-                            // Отмена выдачи: возвращаем на склад и резервируем
-                            $part->increment('stock_quantity', $oldQty);
-                            $part->increment('reserved_quantity', $newQty);
-                            PartMovement::create([
-                                'part_id' => $part->id,
-                                'order_id' => $orderId,
-                                'user_id' => auth()->id(),
-                                'type' => PartMovement::TYPE_ISSUE_UNDO,
-                                'quantity' => $oldQty,
-                                'comment' => 'Отмена выдачи по заказу №'.$orderId,
-                            ]);
-                        } elseif ($oldIssued && $newIssued) {
-                            // Уже выдано, изменили количество — корректируем stock
-                            $delta = $newQty - $oldQty;
-                            if ($delta != 0) {
-                                $part->decrement('stock_quantity', $delta);
-                                PartMovement::create([
-                                    'part_id' => $part->id,
-                                    'order_id' => $orderId,
-                                    'user_id' => auth()->id(),
-                                    'type' => $delta > 0 ? PartMovement::TYPE_ISSUE : PartMovement::TYPE_ISSUE_UNDO,
-                                    'quantity' => abs($delta),
-                                    'comment' => 'Корректировка выданного по заказу №'.$orderId,
-                                ]);
-                            }
-                        }
-
-                        $record->pivot->update([
-                            'quantity' => $data['quantity'],
-                            'price' => $data['price'],
-                            'sum' => $data['sum'],
-                            'is_issued' => $data['is_issued'] ?? false,
-                        ]);
-
-                        $this->getOwnerRecord()->load('services', 'parts');
-                        $this->getOwnerRecord()->recalculateTotal();
-
-                        return $record;
-                    }),
-
-                DeleteAction::make()
-                    ->label('Удалить')
-                    ->visible(fn () => $this->getOwnerRecord()->isOpen())
-                    ->before(function (Model $record) {
-                        // Снимаем резерв только для невыданных позиций
-                        if (! (bool) $record->pivot->is_issued) {
-                            $qty = (float) $record->pivot->quantity;
-                            $record->decrement('reserved_quantity', $qty);
-                            PartMovement::create([
-                                'part_id' => $record->id,
-                                'order_id' => $this->getOwnerRecord()->id,
-                                'user_id' => auth()->id(),
-                                'type' => PartMovement::TYPE_RELEASE,
-                                'quantity' => $qty,
-                                'comment' => 'Удаление из заказа №'.$this->getOwnerRecord()->id,
-                            ]);
-                        }
-                    })
-                    ->after(function () {
-                        $this->getOwnerRecord()->load('services', 'parts');
-                        $this->getOwnerRecord()->recalculateTotal();
-                    }),
-            ])
-            ->headerActions([
-                AttachAction::make()
-                    ->label('Добавить запчасть')
-                    ->visible(fn () => $this->getOwnerRecord()->isOpen())
-                    ->preloadRecordSelect()
-                    ->recordSelectSearchColumns(['name', 'article'])
-                    ->recordSelectOptionsQuery(fn ($query) => $query->where('active', true))
-                    ->form(fn (AttachAction $action): array => [
-                        $action->getRecordSelect()
-                            ->label('Запчасть / материал')
-                            ->required()
-                            ->live()
-                            ->afterStateUpdated(function ($state, callable $set) {
-                                if ($state) {
-                                    $part = Part::find($state);
-                                    if ($part) {
-                                        $set('price', $part->price);
-                                        $set('sum', $part->price);
-                                    }
-                                }
-                            }),
-
-                        Placeholder::make('compat')
-                            ->label('Совместимость')
-                            ->content(fn (callable $get) => $this->compatNote($get('recordId'))),
-
+                    ->fillForm(fn (Model $record) => [
+                        'quantity' => $record->pivot->quantity,
+                        'price' => $record->pivot->price,
+                        'sum' => $record->pivot->sum,
+                    ])
+                    ->form(fn (Model $record) => [
                         TextInput::make('quantity')
                             ->label('Количество')
                             ->numeric()
                             ->minValue(1)
-                            ->default(1)
                             ->required()
                             ->live(debounce: 300)
                             ->afterStateUpdated(function ($state, callable $get, callable $set) {
                                 $set('sum', round((float) $state * (float) ($get('price') ?? 0), 2));
                             })
+                            // Потолок = уже списанное на эту позицию + что ещё есть на
+                            // складе. Больше выдать нельзя — иначе остаток уйдёт в минус.
+                            ->helperText(function () use ($record) {
+                                $part = Part::find($record->id);
+                                $max = (float) $record->pivot->quantity + (float) ($part?->available_quantity ?? 0);
+
+                                return 'Максимум: '.$max.' '.($part?->unit ?? '').' (на складе ещё доступно '.($part?->available_quantity ?? 0).').';
+                            })
                             ->rules([
-                                // Проверяем доступный остаток
-                                fn (callable $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
-                                    $partId = $get('recordId');
-                                    if (! $partId) {
-                                        return;
-                                    }
-                                    $part = Part::find($partId);
+                                fn () => function (string $attribute, $value, \Closure $fail) use ($record) {
+                                    $part = Part::find($record->id);
                                     if (! $part) {
                                         return;
                                     }
-                                    if ((float) $value > $part->available_quantity) {
-                                        $fail("Недостаточно на складе. Доступно: {$part->available_quantity} {$part->unit}.");
+                                    $max = (float) $record->pivot->quantity + (float) $part->available_quantity;
+                                    if ((float) $value > $max) {
+                                        $fail("Недостаточно на складе. Максимум для этой позиции: {$max} {$part->unit} (сейчас доступно {$part->available_quantity} {$part->unit}).");
                                     }
                                 },
                             ]),
@@ -307,29 +190,157 @@ class PartsRelationManager extends RelationManager
                             ->dehydrated(true)
                             ->default(0),
                     ])
-                    ->after(function (Model $record) {
-                        // Получаем свежеприкреплённую строку пивота
-                        $pivot = DB::table('order_part')
-                            ->where('order_id', $this->getOwnerRecord()->id)
-                            ->where('part_id', $record->id)
-                            ->orderByDesc('created_at')
-                            ->first();
+                    ->using(function (Model $record, array $data): Model {
+                        // Позиции в наряде всегда выданы (списаны со склада). При
+                        // изменении количества корректируем остаток на разницу.
+                        $oldQty = (float) $record->pivot->quantity;
+                        $newQty = (float) $data['quantity'];
+                        $orderId = $this->getOwnerRecord()->id;
+                        $part = Part::find($record->id);
 
-                        if ($pivot) {
-                            $qty = (float) $pivot->quantity;
-                            $record->increment('reserved_quantity', $qty);
+                        $delta = $newQty - $oldQty;
+
+                        // Защита от ухода в минус (на случай обхода валидации формы).
+                        if ($part && $delta > 0 && $delta > (float) $part->available_quantity) {
+                            Notification::make()
+                                ->title('Недостаточно на складе')
+                                ->body("Доступно: {$part->available_quantity} {$part->unit}. Изменение отменено.")
+                                ->danger()
+                                ->send();
+
+                            return $record;
+                        }
+                        if ($part && $delta != 0) {
+                            $part->decrement('stock_quantity', $delta);
                             PartMovement::create([
-                                'part_id' => $record->id,
-                                'order_id' => $this->getOwnerRecord()->id,
+                                'part_id' => $part->id,
+                                'order_id' => $orderId,
                                 'user_id' => auth()->id(),
-                                'type' => PartMovement::TYPE_RESERVE,
-                                'quantity' => $qty,
-                                'comment' => 'Резервирование для заказа №'.$this->getOwnerRecord()->id,
+                                'type' => $delta > 0 ? PartMovement::TYPE_ISSUE : PartMovement::TYPE_ISSUE_UNDO,
+                                'quantity' => abs($delta),
+                                'comment' => 'Корректировка количества в заказе №'.$orderId,
                             ]);
                         }
 
+                        $record->pivot->update([
+                            'quantity' => $data['quantity'],
+                            'price' => $data['price'],
+                            'sum' => $data['sum'],
+                            'is_issued' => true,
+                        ]);
+
                         $this->getOwnerRecord()->load('services', 'parts');
                         $this->getOwnerRecord()->recalculateTotal();
+
+                        return $record;
+                    }),
+
+                DetachAction::make()
+                    ->label('Убрать из заказа')
+                    ->visible(fn () => $this->getOwnerRecord()->isOpen())
+                    ->before(function (Model $record) {
+                        $orderId = $this->getOwnerRecord()->id;
+                        $qty = (float) $record->pivot->quantity;
+
+                        if ((bool) $record->pivot->is_issued) {
+                            // Выданное — возвращаем на склад
+                            $record->increment('stock_quantity', $qty);
+                            PartMovement::create([
+                                'part_id' => $record->id,
+                                'order_id' => $orderId,
+                                'user_id' => auth()->id(),
+                                'type' => PartMovement::TYPE_ISSUE_UNDO,
+                                'quantity' => $qty,
+                                'comment' => 'Удаление выданной позиции из заказа №'.$orderId,
+                            ]);
+                        } else {
+                            // Зарезервированное (старые данные) — снимаем резерв
+                            $record->decrement('reserved_quantity', $qty);
+                            PartMovement::create([
+                                'part_id' => $record->id,
+                                'order_id' => $orderId,
+                                'user_id' => auth()->id(),
+                                'type' => PartMovement::TYPE_RELEASE,
+                                'quantity' => $qty,
+                                'comment' => 'Удаление из заказа №'.$orderId,
+                            ]);
+                        }
+                    })
+                    ->after(function () {
+                        $this->getOwnerRecord()->load('services', 'parts');
+                        $this->getOwnerRecord()->recalculateTotal();
+                    }),
+            ])
+            ->headerActions([
+                // Добавление = немедленная выдача: списываем со склада в наряд
+                // через PartRequest::fulfill(), поэтому позиция сразу попадает и
+                // в наряд, и в журнал «Выдача запчастей».
+                Action::make('issuePart')
+                    ->label('Добавить запчасть')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->visible(fn () => $this->getOwnerRecord()->isOpen()
+                        && auth()->user()?->can('create_part_request'))
+                    ->modalHeading('Выдача запчасти на заказ')
+                    ->modalSubmitActionLabel('Выдать')
+                    ->schema([
+                        Select::make('part_id')
+                            ->label('Запчасть / материал')
+                            ->options(fn () => Part::where('active', true)
+                                ->with('carModels.brand')
+                                ->orderBy('name')
+                                ->get()
+                                ->mapWithKeys(fn (Part $p) => [
+                                    $p->id => $p->name.' ['.$p->applicabilityLabel().'] · доступно '.$p->available_quantity.' '.$p->unit,
+                                ]))
+                            ->searchable()
+                            ->required()
+                            ->live(),
+
+                        Placeholder::make('compat')
+                            ->label('Совместимость')
+                            ->content(fn (callable $get) => $this->compatNote($get('part_id'))),
+
+                        TextInput::make('quantity')
+                            ->label('Количество')
+                            ->numeric()
+                            ->minValue(1)
+                            ->default(1)
+                            ->required()
+                            ->rules([
+                                fn (callable $get) => function (string $attribute, $value, \Closure $fail) use ($get) {
+                                    $part = Part::find($get('part_id'));
+                                    if ($part && (float) $value > $part->available_quantity) {
+                                        $fail("Недостаточно на складе. Доступно: {$part->available_quantity} {$part->unit}.");
+                                    }
+                                },
+                            ]),
+                    ])
+                    ->action(function (array $data) {
+                        try {
+                            DB::transaction(function () use ($data) {
+                                $request = PartRequest::create([
+                                    'order_id' => $this->getOwnerRecord()->id,
+                                    'part_id' => $data['part_id'],
+                                    'mechanic_id' => auth()->id(),
+                                    'quantity' => $data['quantity'],
+                                    'status' => PartRequest::STATUS_PENDING,
+                                ]);
+                                $request->fulfill(auth()->id());
+                            });
+
+                            $this->getOwnerRecord()->load('services', 'parts');
+
+                            Notification::make()
+                                ->title('Запчасть выдана и добавлена в заказ')
+                                ->success()
+                                ->send();
+                        } catch (\RuntimeException $e) {
+                            Notification::make()
+                                ->title('Не удалось выдать')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
                     }),
             ]);
     }

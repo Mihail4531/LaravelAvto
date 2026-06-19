@@ -35,9 +35,8 @@
             <div class="border border-primary-600/40 bg-primary-500/[0.06] p-6 lg:p-8 mb-10">
                 <div class="font-mono text-[13px] text-primary-500 mb-3">№ {{ str_pad($appointmentId, 5, '0', STR_PAD_LEFT) }}</div>
                 <p class="text-ink-200 text-lg leading-relaxed max-w-xl">
-                    Ваша заявка получена. Менеджер свяжется с вами по номеру
-                    <span class="font-mono text-ink-100">{{ $clientPhone }}</span>
-                    в течение часа для подтверждения.
+                    Ваша заявка получена и передана в сервис.
+                    Контактный телефон: <span class="font-mono text-ink-100">{{ $clientPhone }}</span>.
                 </p>
             </div>
 
@@ -108,10 +107,11 @@
         @php
             $catalogFlat = $this->serviceCatalog->flatMap(fn ($c) =>
                 $c->services->map(fn ($s) => [
-                    'id'       => $s->id,
-                    'name'     => $s->name,
-                    'price'    => (float) $s->price,
-                    'duration' => $s->duration_minutes,
+                    'id'          => $s->id,
+                    'name'        => $s->name,
+                    'price'       => (float) $s->price,
+                    'duration'    => $s->duration_minutes,
+                    'category_id' => $c->id,
                 ])
             )->values();
         @endphp
@@ -120,6 +120,15 @@
                 activeCat: 'all',
                 selected: @js(array_map('intval', $serviceIds)),
                 services: @js($catalogFlat),
+                limit: 6,
+                baseLimit: 6,
+                init() {
+                    // На широких экранах сразу показываем больше, на телефоне — меньше
+                    this.baseLimit = window.matchMedia('(min-width: 1024px)').matches ? 9 : 4;
+                    this.limit = this.baseLimit;
+                    // Смена категории — сбрасываем «Показать ещё»
+                    this.$watch('activeCat', () => { this.limit = this.baseLimit; });
+                },
                 toggle(id) {
                     const i = this.selected.indexOf(id);
                     if (i === -1) this.selected.push(id); else this.selected.splice(i, 1);
@@ -128,10 +137,16 @@
                 has(id) { return this.selected.includes(id); },
                 get chosen() { return this.services.filter(s => this.selected.includes(s.id)); },
                 fmt(n) { return new Intl.NumberFormat('ru-RU').format(n); },
+                visible(catId) { return this.activeCat === 'all' || this.activeCat === catId; },
+                // id видимых услуг в порядке каталога (= порядок в DOM)
+                orderedVisibleIds() { return this.services.filter(s => this.visible(s.category_id)).map(s => s.id); },
+                // показываем только первые `limit` из отфильтрованных
+                withinLimit(catId, id) { return this.visible(catId) && this.orderedVisibleIds().indexOf(id) < this.limit; },
+                get visibleCount() { return this.services.filter(s => this.visible(s.category_id)).length; },
              }">
 
             {{-- Заголовок --}}
-            <div class="mb-8">
+            <div class="mb-8" x-ref="servicesTop">
                 <h2 class="font-display font-extrabold tracking-tight leading-[1.02] text-[clamp(1.9rem,4.5vw,3.25rem)] text-ink-100 text-balance">
                     Выберите <span class="text-primary-400">услуги</span>
                 </h2>
@@ -164,17 +179,17 @@
                 </div>
             </div>
 
-            {{-- Табы категорий (клиентские) --}}
-            <div class="flex flex-wrap gap-2 mb-8">
+            {{-- Табы категорий: на мобильном — горизонтальная лента (свайп), на десктопе — перенос --}}
+            <div class="flex gap-2 overflow-x-auto lg:flex-wrap lg:overflow-visible -mx-5 px-5 lg:mx-0 lg:px-0 pb-1 lg:pb-0 mb-8 hide-scrollbar">
                 <button type="button" @click="activeCat = 'all'"
                         :class="activeCat === 'all' ? 'bg-primary-500 text-white border-primary-500' : 'text-ink-300 border-ink-700 hover:border-ink-500 hover:text-ink-100'"
-                        class="px-5 py-2.5 text-[13px] font-semibold border transition-all duration-200 active:scale-95">
+                        class="px-5 py-2.5 text-[13px] font-semibold border whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95">
                     Все услуги
                 </button>
                 @foreach($this->serviceCatalog as $cat)
                 <button type="button" @click="activeCat = {{ $cat->id }}"
                         :class="activeCat === {{ $cat->id }} ? 'bg-primary-500 text-white border-primary-500' : 'text-ink-300 border-ink-700 hover:border-ink-500 hover:text-ink-100'"
-                        class="px-5 py-2.5 text-[13px] font-semibold border transition-all duration-200 active:scale-95">
+                        class="px-5 py-2.5 text-[13px] font-semibold border whitespace-nowrap shrink-0 transition-all duration-200 active:scale-95">
                     {{ $cat->name }}
                 </button>
                 @endforeach
@@ -184,7 +199,10 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 @foreach($this->serviceCatalog as $cat)
                     @foreach($cat->services as $service)
-                    <div x-show="activeCat === 'all' || activeCat === {{ $cat->id }}"
+                    <div x-show="withinLimit({{ $cat->id }}, {{ $service->id }})"
+                         x-transition:enter="transition ease-out duration-300"
+                         x-transition:enter-start="opacity-0 scale-95 translate-y-2"
+                         x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                          @click="toggle({{ $service->id }})"
                          :class="has({{ $service->id }}) ? 'border-primary-500 bg-primary-500/[0.06]' : 'border-ink-700 hover:border-ink-500'"
                          class="relative cursor-pointer bg-ink-800 border p-5 transition-all duration-200 group active:scale-[0.98]">
@@ -215,6 +233,25 @@
                     </div>
                     @endforeach
                 @endforeach
+            </div>
+
+            {{-- Управление длиной списка: «Показать ещё» (пока есть скрытые) и «Свернуть» --}}
+            <div x-show="visibleCount > baseLimit" x-cloak class="mt-8 flex flex-wrap items-center justify-center gap-3">
+                <button type="button" x-show="visibleCount > limit" @click="limit += baseLimit" class="btn-ghost group/more">
+                    Показать ещё
+                    <span class="font-mono normal-case tracking-normal text-ink-400" x-text="'(' + (visibleCount - limit) + ')'"></span>
+                    <svg class="w-4 h-4 transition-transform group-hover/more:translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/>
+                    </svg>
+                </button>
+                <button type="button" x-show="limit > baseLimit" x-cloak
+                        @click="limit = baseLimit; $nextTick(() => $refs.servicesTop.scrollIntoView({ behavior: 'smooth', block: 'start' }))"
+                        class="btn-ghost group/less">
+                    Свернуть
+                    <svg class="w-4 h-4 transition-transform group-hover/less:-translate-y-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7"/>
+                    </svg>
+                </button>
             </div>
 
             {{-- Счётчик выбранного --}}
@@ -299,8 +336,8 @@
                     <p class="text-ink-400 text-[14px] leading-relaxed max-w-md mb-6">
                         Сейчас нет свободных окон. Позвоните — поможем подобрать удобное время{{ $this->hasBranchChoice ? ' или предложим другой филиал' : '' }}.
                     </p>
-                    <a href="tel:+78000000000" class="inline-flex items-center gap-3 px-5 py-3 border border-ink-700 hover:border-ink-500 hover:bg-ink-800 transition-colors text-[13px] font-semibold">
-                        <span class="font-mono">+7 800 000 00 00</span>
+                    <a href="tel:+79616913023" class="inline-flex items-center gap-3 px-5 py-3 border border-ink-700 hover:border-ink-500 hover:bg-ink-800 transition-colors text-[13px] font-semibold">
+                        <span class="font-mono">+7 961 691-30-23</span>
                     </a>
                 </div>
                 @else
@@ -353,7 +390,7 @@
         <div class="{{ $stepDirection === 'back' ? 'wizard-step-back' : 'wizard-step-fwd' }}" wire:key="step-3">
 
             <h2 class="font-display font-extrabold text-[clamp(1.6rem,4vw,2.5rem)] tracking-tight text-ink-100 mb-2 text-balance">Как с вами связаться</h2>
-            <p class="text-ink-400 text-[14px] mb-10">Менеджер позвонит для подтверждения. Email и данные авто — по желанию.</p>
+            <p class="text-ink-400 text-[14px] mb-10">Телефон — для связи. Данные авто — по желанию.</p>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {{-- Фамилия --}}
@@ -689,7 +726,7 @@
 
         {{-- Помощь --}}
         <div class="mt-10 text-[12px] text-ink-400">
-            Возникли сложности? <a href="tel:+78000000000" class="text-ink-100 font-mono hover:text-primary-400 transition-colors">+7 800 000 00 00</a>
+            Возникли сложности? <a href="tel:+79616913023" class="text-ink-100 font-mono hover:text-primary-400 transition-colors">+7 961 691-30-23</a>
         </div>
 
         @endif

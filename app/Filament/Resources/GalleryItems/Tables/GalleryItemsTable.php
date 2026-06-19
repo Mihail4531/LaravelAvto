@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\GalleryItems\Tables;
 
-use App\Models\GalleryItem;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -31,24 +30,6 @@ class GalleryItemsTable
                     ->placeholder('— без названия —')
                     ->limit(40),
 
-                TextColumn::make('size')
-                    ->label('Размер')
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        GalleryItem::SIZE_WIDE => 'Широкая',
-                        GalleryItem::SIZE_TALL => 'Высокая',
-                        default => 'Обычная',
-                    })
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        GalleryItem::SIZE_WIDE => 'info',
-                        GalleryItem::SIZE_TALL => 'warning',
-                        default => 'gray',
-                    }),
-
-                TextColumn::make('sort_order')
-                    ->label('Порядок')
-                    ->sortable(),
-
                 ToggleColumn::make('active')
                     ->label('Активна')
                     ->sortable(),
@@ -58,7 +39,7 @@ class GalleryItemsTable
                     ->dateTime('d.m.Y H:i')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
-            ->defaultSort('sort_order')
+            ->defaultSort('created_at', 'desc')
             ->recordActions([
                 EditAction::make()->label('Редактировать'),
                 DeleteAction::make()->label('Удалить'),

@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\Orders\RelationManagers;
 
+use App\Models\Service;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Actions\AttachAction;
-use Filament\Actions\DeleteAction;
+use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -231,8 +232,11 @@ class ServicesRelationManager extends RelationManager
                         return $record;
                     }),
 
-                DeleteAction::make()
-                    ->label('Удалить')
+                // Убираем услугу ИЗ ЗАКАЗА (удаляем строку pivot order_service),
+                // а не саму услугу из справочника — иначе FK order_service.service_id
+                // (RESTRICT) роняет запрос и портится каталог.
+                DetachAction::make()
+                    ->label('Убрать из заказа')
                     ->visible(fn () => $this->getOwnerRecord()->isOpen())
                     ->after(function () {
                         $this->getOwnerRecord()->load('services', 'parts');
@@ -247,7 +251,14 @@ class ServicesRelationManager extends RelationManager
                     ->form(fn (AttachAction $action): array => [
                         $action->getRecordSelect()
                             ->label('Услуга')
-                            ->required(),
+                            ->required()
+                            ->live()
+                            // Выбрали услугу — подставляем её цену из каталога и считаем сумму
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                $price = $state ? (float) (Service::find($state)?->price ?? 0) : 0;
+                                $set('price', $price);
+                                $set('sum', round($price * (float) ($get('quantity') ?: 1), 2));
+                            }),
 
                         Select::make('executor_id')
                             ->label('Исполнитель (мастер)')
@@ -262,19 +273,29 @@ class ServicesRelationManager extends RelationManager
                             ->numeric()
                             ->minValue(1)
                             ->default(1)
-                            ->required(),
+                            ->required()
+                            ->live(debounce: 300)
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                $set('sum', round((float) $state * (float) ($get('price') ?? 0), 2));
+                            }),
 
                         TextInput::make('price')
                             ->label('Цена за ед. (₽)')
                             ->numeric()
                             ->minValue(0)
                             ->prefix('₽')
-                            ->required(),
+                            ->required()
+                            ->live(debounce: 300)
+                            ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                                $set('sum', round((float) $state * (float) ($get('quantity') ?? 1), 2));
+                            }),
 
                         TextInput::make('sum')
                             ->label('Сумма (₽)')
                             ->numeric()
                             ->prefix('₽')
+                            ->disabled()
+                            ->dehydrated(true)
                             ->default(0),
 
                         Select::make('status')

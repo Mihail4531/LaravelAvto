@@ -34,7 +34,7 @@ class ClientForm
 
                 Section::make('Контакты')
                     ->icon('heroicon-o-phone')
-                    ->description('Телефон для связи и email для входа в личный кабинет на сайте.')
+                    ->description('Телефон для связи и email для доступа к истории обслуживания на сайте.')
                     ->columns(2)
                     ->schema([
                         Phone::configure(TextInput::make('phone'))
@@ -47,7 +47,7 @@ class ClientForm
                             ]),
                         TextInput::make('email')
                             ->label('Email')
-                            ->helperText('Используется клиентом для входа в личный кабинет на сайте.')
+                            ->helperText('Используется клиентом для доступа к истории обслуживания на сайте.')
                             ->email()
                             ->required()
                             ->unique('clients', 'email', ignorable: fn ($record) => $record)

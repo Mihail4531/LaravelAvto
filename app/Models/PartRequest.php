@@ -36,6 +36,26 @@ class PartRequest extends Model
         ];
     }
 
+    /** Цвет статуса (единый для всех таблиц/карточек). */
+    public static function statusColor(?string $state): string
+    {
+        return [
+            self::STATUS_PENDING => 'warning',
+            self::STATUS_ISSUED => 'success',
+            self::STATUS_REJECTED => 'danger',
+        ][$state] ?? 'gray';
+    }
+
+    /** Иконка статуса (единая для всех таблиц/карточек). */
+    public static function statusIcon(?string $state): string
+    {
+        return [
+            self::STATUS_PENDING => 'heroicon-m-clock',
+            self::STATUS_ISSUED => 'heroicon-m-check-circle',
+            self::STATUS_REJECTED => 'heroicon-m-x-circle',
+        ][$state] ?? 'heroicon-m-question-mark-circle';
+    }
+
     public function order(): BelongsTo
     {
         return $this->belongsTo(Order::class);
@@ -78,13 +98,34 @@ class PartRequest extends Model
                 throw new \RuntimeException('Наряд уже завершён или закрыт — выдача по заявке невозможна.');
             }
 
-            // Добавляем в заказ как уже выданную позицию (биллинг по цене склада)
-            $order->parts()->attach($part->id, [
-                'quantity' => $qty,
-                'price' => $part->price,
-                'sum' => round($qty * (float) $part->price, 2),
-                'is_issued' => true,
-            ]);
+            // Добавляем в заказ как уже выданную позицию (биллинг по цене склада).
+            // Если такая запчасть уже выдана в этот наряд — увеличиваем количество
+            // в существующей строке, а не плодим дубль (цену сохраняем прежнюю).
+            $existing = DB::table('order_part')
+                ->where('order_id', $order->id)
+                ->where('part_id', $part->id)
+                ->where('is_issued', true)
+                ->first();
+
+            if ($existing) {
+                $newQty = (float) $existing->quantity + $qty;
+                DB::table('order_part')
+                    ->where('order_id', $order->id)
+                    ->where('part_id', $part->id)
+                    ->where('is_issued', true)
+                    ->update([
+                        'quantity' => $newQty,
+                        'sum' => round($newQty * (float) $existing->price, 2),
+                        'updated_at' => now(),
+                    ]);
+            } else {
+                $order->parts()->attach($part->id, [
+                    'quantity' => $qty,
+                    'price' => $part->price,
+                    'sum' => round($qty * (float) $part->price, 2),
+                    'is_issued' => true,
+                ]);
+            }
 
             // Списываем физический остаток
             $part->decrement('stock_quantity', $qty);

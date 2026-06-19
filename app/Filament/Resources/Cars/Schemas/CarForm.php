@@ -62,9 +62,28 @@ class CarForm
 
                         TextInput::make('vin')
                             ->label('VIN (уникальный)')
+                            ->placeholder('Напр. JTDBR32E330079877')
+                            ->helperText('17 символов: латинские буквы (кроме I, O, Q) и цифры.')
                             ->maxLength(17)
+                            ->extraInputAttributes(['style' => 'text-transform: uppercase'])
+                            ->rule('regex:/^([A-HJ-NPR-Z0-9]{17})?$/i')
+                            ->dehydrateStateUsing(fn (?string $state) => filled($state) ? strtoupper(trim($state)) : null)
                             ->unique('cars', 'vin', ignorable: fn ($record) => $record)
-                            ->validationMessages(['unique' => 'Автомобиль с таким VIN уже зарегистрирован.']),
+                            ->validationMessages([
+                                'unique' => 'Автомобиль с таким VIN уже зарегистрирован.',
+                                'regex' => 'VIN должен состоять ровно из 17 символов — латинских букв (кроме I, O, Q) и цифр.',
+                            ]),
+
+                        TextInput::make('body_number')
+                            ->label('Номер кузова')
+                            ->helperText('У большинства машин совпадает с VIN; заполняется, если отличается.')
+                            ->maxLength(50)
+                            ->nullable(),
+
+                        TextInput::make('engine_number')
+                            ->label('Номер двигателя')
+                            ->maxLength(50)
+                            ->nullable(),
 
                         TextInput::make('year')
                             ->label('Год выпуска')

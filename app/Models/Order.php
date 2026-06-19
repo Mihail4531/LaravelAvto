@@ -44,6 +44,30 @@ class Order extends Model
         ];
     }
 
+    /** Цвет статуса (единый для всех таблиц/карточек). */
+    public static function statusColor(?string $state): string
+    {
+        return [
+            self::STATUS_NEW => 'gray',
+            self::STATUS_IN_PROGRESS => 'warning',
+            self::STATUS_COMPLETED => 'info',
+            self::STATUS_CLOSED => 'success',
+            self::STATUS_CANCELLED => 'danger',
+        ][$state] ?? 'gray';
+    }
+
+    /** Иконка статуса (единая для всех таблиц/карточек). */
+    public static function statusIcon(?string $state): string
+    {
+        return [
+            self::STATUS_NEW => 'heroicon-m-inbox-arrow-down',
+            self::STATUS_IN_PROGRESS => 'heroicon-m-wrench',
+            self::STATUS_COMPLETED => 'heroicon-m-banknotes',
+            self::STATUS_CLOSED => 'heroicon-m-check-badge',
+            self::STATUS_CANCELLED => 'heroicon-m-x-circle',
+        ][$state] ?? 'heroicon-m-question-mark-circle';
+    }
+
     /**
      * Наряд «открыт» (можно менять состав: услуги, запчасти, исполнителей),
      * только пока он новый или в работе. Выполнен/закрыт/отменён — заморожен.
@@ -55,7 +79,8 @@ class Order extends Model
 
     protected static function booted(): void
     {
-        // При переводе заказа в статус «Отменён» — снимаем резервы с невыданных запчастей
+        // При переводе заказа в статус «Отменён» возвращаем запчасти на склад:
+        // выданные — обратно в остаток, старые зарезервированные — снимаем резерв.
         static::updating(function (Order $order) {
             if (
                 $order->isDirty('status') &&
@@ -68,7 +93,24 @@ class Order extends Model
                     $isIssued = (bool) $part->pivot->is_issued;
                     $qty = (float) $part->pivot->quantity;
 
-                    if (! $isIssued && $qty > 0) {
+                    if ($qty <= 0) {
+                        continue;
+                    }
+
+                    if ($isIssued) {
+                        // Выданное — возвращаем на склад
+                        $part->increment('stock_quantity', $qty);
+
+                        PartMovement::create([
+                            'part_id' => $part->id,
+                            'order_id' => $order->id,
+                            'user_id' => auth()->id(),
+                            'type' => PartMovement::TYPE_ISSUE_UNDO,
+                            'quantity' => $qty,
+                            'comment' => 'Возврат на склад при отмене заказа',
+                        ]);
+                    } else {
+                        // Зарезервированное (старые данные) — снимаем резерв
                         $part->decrement('reserved_quantity', $qty);
 
                         PartMovement::create([

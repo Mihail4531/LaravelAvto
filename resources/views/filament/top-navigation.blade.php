@@ -16,11 +16,11 @@
             margin: 0;
         }
         @media (max-width: 1024px) {
-            /* На узких экранах не центрируем абсолютом — возвращаем в поток. */
-            .fi-topbar .fi-topnav {
-                position: static;
-                transform: none;
-            }
+            /* На планшете/телефоне верхнее меню переполняло топбар, поэтому
+               прячем его здесь — те же группы показываем в БОКОВОМ меню
+               (resources/views/filament/sidebar-navigation.blade.php,
+               render hook SIDEBAR_NAV_END). */
+            .fi-topbar .fi-topnav { display: none !important; }
         }
     </style>
 

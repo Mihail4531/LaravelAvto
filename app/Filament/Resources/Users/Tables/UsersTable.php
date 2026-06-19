@@ -96,7 +96,10 @@ class UsersTable
                 TrashedFilter::make()->label('В корзине'),
             ])
             ->recordActions([
-                EditAction::make()->label('Редактировать'),
+                EditAction::make()
+                    ->label('Редактировать')
+                    // Себя редактируем только через «Мой профиль» — кнопку скрываем.
+                    ->visible(fn ($record) => $record->getKey() !== auth()->id()),
                 DeleteAction::make()
                     ->label('Удалить')
                     // Нельзя удалить собственную учётную запись.

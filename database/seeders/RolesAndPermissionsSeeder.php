@@ -137,6 +137,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ...$this->readOnly('car_model'),
             ...$this->readOnly('part'),
             ...$this->readOnly('time_slot'),
+            // Выдача запчастей на заказ (самовыдача, без подтверждения кладовщика)
+            'view_any_part_request', 'view_part_request', 'create_part_request',
             'access_admin_panel',
         ]);
 
@@ -155,6 +157,8 @@ class RolesAndPermissionsSeeder extends Seeder
             ...$this->readOnly('part'),
             ...$this->readOnly('service'),
             ...$this->readOnly('category'),
+            // Выдача запчастей на заказ (самовыдача, без подтверждения кладовщика)
+            'view_any_part_request', 'view_part_request', 'create_part_request',
             'access_admin_panel',
         ]);
 
@@ -164,8 +168,8 @@ class RolesAndPermissionsSeeder extends Seeder
         $warehouseman->syncPermissions([
             'view_any_part', 'view_part', 'create_part', 'update_part',
             'view_any_order', 'view_order',
-            // Заявки механиков на запчасти: видит и обрабатывает (выдаёт/отклоняет)
-            'view_any_part_request', 'view_part_request', 'update_part_request',
+            // Выдача запчастей: видит журнал и сам выдаёт на заказ
+            'view_any_part_request', 'view_part_request', 'create_part_request', 'update_part_request',
             'issue_part',
             'receive_part',
             'view_warehouse_reports',
@@ -182,7 +186,7 @@ class RolesAndPermissionsSeeder extends Seeder
             ...$this->readOnly('part'),
             ...$this->readOnly('service'),
             ...$this->readOnly('category'),
-            // Запрос запчастей у кладовщика: создаёт и видит свои заявки
+            // Выдача запчастей: сам выдаёт на свои заказы и видит свои выдачи
             'view_any_part_request', 'view_part_request', 'create_part_request',
             'change_own_service_status',
             'access_admin_panel',

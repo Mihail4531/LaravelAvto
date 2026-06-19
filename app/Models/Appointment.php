@@ -50,6 +50,30 @@ class Appointment extends Model
         ];
     }
 
+    /** Цвет статуса (единый для всех таблиц/карточек). */
+    public static function statusColor(?string $state): string
+    {
+        return [
+            self::STATUS_NEW => 'warning',
+            self::STATUS_CONFIRMED => 'info',
+            self::STATUS_CONVERTED => 'success',
+            self::STATUS_REJECTED => 'danger',
+            self::STATUS_CANCELLED => 'gray',
+        ][$state] ?? 'gray';
+    }
+
+    /** Иконка статуса (единая для всех таблиц/карточек). */
+    public static function statusIcon(?string $state): string
+    {
+        return [
+            self::STATUS_NEW => 'heroicon-m-bell-alert',
+            self::STATUS_CONFIRMED => 'heroicon-m-check-circle',
+            self::STATUS_CONVERTED => 'heroicon-m-arrow-right-circle',
+            self::STATUS_REJECTED => 'heroicon-m-x-circle',
+            self::STATUS_CANCELLED => 'heroicon-m-minus-circle',
+        ][$state] ?? 'heroicon-m-question-mark-circle';
+    }
+
     public function branch()
     {
         return $this->belongsTo(Branch::class);

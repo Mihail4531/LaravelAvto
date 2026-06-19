@@ -1,6 +1,6 @@
 @extends('layouts.public')
 
-@section('title', 'АвтоСервис — Современный ремонт автомобилей')
+@section('title', 'Mobile 1')
 
 @section('content')
 
@@ -22,15 +22,22 @@
             {{-- Левая колонна: текст --}}
             <div class="col-span-12 lg:col-span-7">
 
-                {{-- Бейдж статуса --}}
+                {{-- Бейдж статуса — отражает реальное наличие свободных окон на сегодня --}}
                 <div class="animate-snap stagger-1 mb-7">
-                    <span class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-ink-700 bg-ink-800 shadow-sm">
-                        <span class="relative flex h-2 w-2">
-                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-500 opacity-75"></span>
-                            <span class="relative inline-flex rounded-full h-2 w-2 bg-success-500"></span>
+                    @if ($hasSlotsToday)
+                        <span class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-ink-700 bg-ink-800 shadow-sm">
+                            <span class="relative flex h-2 w-2">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-success-500 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2 w-2 bg-success-500"></span>
+                            </span>
+                            <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-300">Открыто · свободные окна сегодня</span>
                         </span>
-                        <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-300">Открыто · свободные окна сегодня</span>
-                    </span>
+                    @else
+                        <span class="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-ink-700 bg-ink-800 shadow-sm">
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-ink-500"></span>
+                            <span class="text-[11px] font-bold uppercase tracking-[0.16em] text-ink-400">На сегодня свободных окон нет</span>
+                        </span>
+                    @endif
                 </div>
 
                 {{-- Заголовок --}}
@@ -41,7 +48,7 @@
 
                 <p class="mt-6 max-w-xl text-ink-300 text-[17px] lg:text-[19px] leading-relaxed animate-snap stagger-3 text-pretty">
                     Современная диагностика, опытные мастера и прозрачные цены.
-                    Записывайтесь онлайн за две минуты — подтверждение придёт на email.
+                    Запишитесь онлайн за две минуты — выберите услуги и удобное время.
                 </p>
 
                 <div class="mt-9 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 sm:gap-4 animate-snap stagger-4">
@@ -61,7 +68,7 @@
                     <svg class="w-4 h-4 text-ink-500 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.75">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z"/>
                     </svg>
-                    <span>Пн–Сб 9:00–21:00, воскресенье — по записи</span>
+                    <span>Пн–Сб 9:00–21:00</span>
                 </div>
             </div>
 
@@ -84,8 +91,8 @@
 
                     <ul class="space-y-3.5 mb-8">
                         @foreach([
-                            'Подтверждение сразу на email',
-                            'Мастер свяжется для уточнения',
+                            'Запись онлайн без звонка',
+                            'Выбор услуг и удобного времени',
                             'Гарантия на работы 6 месяцев',
                         ] as $point)
                         <li class="flex items-start gap-3 text-ink-200 text-[14px] leading-snug hero-rise" style="--i:{{ $loop->index + 2 }}">
@@ -108,7 +115,7 @@
 
                     <div class="mt-6 pt-6 border-t border-ink-700 flex items-center justify-between hero-rise" style="--i:6">
                         <span class="text-ink-400 text-[13px]">Или позвоните</span>
-                        <a href="tel:+78000000000" class="font-mono text-[15px] text-ink-100 hover:text-primary-500 transition-colors">+7 800 000 00 00</a>
+                        <a href="tel:+79616913023" class="font-mono text-[15px] text-ink-100 hover:text-primary-500 transition-colors">+7 961 691-30-23</a>
                     </div>
                 </div>
             </aside>
@@ -139,12 +146,13 @@
 @php
     $branchCount = $branches->count();
     $branchLabel = 'филиал' . ($branchCount == 1 ? '' : ($branchCount < 5 ? 'а' : 'ов'));
+    $serviceCount = \App\Models\Service::where('active', true)->count();
     $gaugeLen = 245.044; // длина 270°-дуги при r=52 (C = 326.726)
     $stats = [
-        ['num' => 12,           'suffix' => '+', 'frac' => .78, 'l1' => 'лет работы',       'l2' => 'на рынке услуг'],
-        ['num' => 5000,         'suffix' => '+', 'frac' => .92, 'l1' => 'обслуженных авто', 'l2' => 'постоянные клиенты'],
-        ['num' => 50,           'suffix' => '+', 'frac' => .72, 'l1' => 'видов услуг',      'l2' => 'полный цикл работ'],
-        ['num' => $branchCount, 'suffix' => '',  'frac' => .60, 'l1' => $branchLabel . ' в городе', 'l2' => $branchCount == 1 ? 'удобное расположение' : 'удобные локации'],
+        ['num' => 8,             'suffix' => '',  'frac' => .78, 'l1' => 'лет работы',       'l2' => 'на рынке услуг'],
+        ['num' => 5000,          'suffix' => '+', 'frac' => .92, 'l1' => 'обслуженных авто', 'l2' => 'постоянные клиенты'],
+        ['num' => $serviceCount, 'suffix' => '',  'frac' => .72, 'l1' => 'видов услуг',      'l2' => 'полный цикл работ'],
+        ['num' => $branchCount,  'suffix' => '',  'frac' => .60, 'l1' => $branchLabel . ' в городе', 'l2' => $branchCount == 1 ? 'удобное расположение' : 'удобные локации'],
     ];
 @endphp
 <section class="bg-ink-900 py-14 sm:py-20 lg:py-28">
@@ -220,7 +228,7 @@
             </div>
             <p class="text-ink-400 text-[15px] leading-relaxed max-w-md">
                 Выберите категорию, чтобы увидеть актуальные услуги и цены.
-                Каждая работа — с гарантией.
+             
             </p>
         </div>
 
@@ -251,8 +259,8 @@
             $steps = [
                 ['icon' => 'M9.879 7.519c1.171-1.025 3.071-1.025 4.242 0 1.172 1.025 1.172 2.687 0 3.712-.203.179-.43.326-.67.442-.745.361-1.45.999-1.45 1.827v.75M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9 5.25h.008v.008H12v-.008z', 'title' => 'Выбираете услуги', 'desc' => 'Из удобного каталога с ценами и описанием каждой работы. Можно записать сразу несколько услуг.'],
                 ['icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z', 'title' => $branchCount > 1 ? 'Время и филиал' : 'Выбираете время', 'desc' => $branchCount > 1 ? 'Выбираете ближайший филиал и свободное окно. Календарь показывает только реальные слоты.' : 'Выбираете свободное окно в календаре. Показываем только реальные слоты.'],
-                ['icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', 'title' => 'Указываете контакты', 'desc' => 'Имя, телефон и email — для подтверждения. Никаких лишних полей и спама.'],
-                ['icon' => 'M5 13l4 4L19 7', 'title' => 'Подтверждение', 'desc' => 'На email мгновенно прилетает запись с деталями. Менеджер свяжется в течение часа.'],
+                ['icon' => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z', 'title' => 'Указываете контакты', 'desc' => 'Имя и телефон для связи. Email — для доступа к истории обслуживания.'],
+                ['icon' => 'M5 13l4 4L19 7', 'title' => 'Готово', 'desc' => 'Заявка с услугами и выбранным временем передаётся в сервис.'],
             ];
         @endphp
 
@@ -312,7 +320,7 @@
             </div>
             <div class="col-span-12 lg:col-span-5 lg:pt-6">
                 <p class="text-ink-300 text-[16px] leading-relaxed max-w-md lg:ml-auto">
-                    Мы не делаем «дёшево и сердито». Мы делаем как для себя — с пониманием, что машина клиента — это часть его жизни.
+                    Ваш автомобиль — не просто механизм, а важная часть вашего ритма жизни.
                 </p>
             </div>
         </div>
@@ -338,7 +346,7 @@
                     </h3>
                     <p class="text-ink-300 text-[15px] lg:text-base leading-relaxed max-w-md">
                         Если в течение 6 месяцев после ремонта возникнет проблема по нашей вине — устраним
-                        бесплатно. Это записано в договоре, а не мелким шрифтом где-то внизу.
+                        бесплатно.Команда с опытом 8+ лет.
                     </p>
                 </div>
 
@@ -462,6 +470,7 @@
         <div x-data="{
                 open: false,
                 current: 0,
+                slide: 0,
                 items: @js($gallery->map(fn($g) => [
                     'id'      => $g->id,
                     'url'     => asset('storage/'.$g->image),
@@ -472,16 +481,81 @@
                 close() { this.open = false; document.body.style.overflow = ''; },
                 prev() { this.current = (this.current - 1 + this.items.length) % this.items.length; },
                 next() { this.current = (this.current + 1) % this.items.length; },
+                syncSlide(el) {
+                    const center = el.scrollLeft + el.clientWidth / 2;
+                    this.slide = [...el.children].reduce((best, c, i) => {
+                        const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - center);
+                        return d < best.d ? { d, i } : best;
+                    }, { d: Infinity, i: 0 }).i;
+                },
+                goTo(i) { this.$refs.slider.children[i].scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }); },
+                slidePrev() { this.goTo(Math.max(0, this.slide - 1)); },
+                slideNext() { this.goTo(Math.min(this.items.length - 1, this.slide + 1)); },
              }"
              @keydown.escape.window="open && close()"
              @keydown.arrow-left.window="open && prev()"
              @keydown.arrow-right.window="open && next()">
 
-            <div class="grid grid-cols-2 gap-3 sm:grid-cols-12 sm:auto-rows-[200px] lg:auto-rows-[240px] lg:gap-4">
+            {{-- ── Мобильный слайдер (до sm) ───────────────────────────────
+                 Кадр показывается ЦЕЛИКОМ (object-contain) поверх размытой
+                 копии самого себя — ничего не обрезается, поля заполнены
+                 атмосферно. Снап-прокрутка, рабочие стрелки, точки. Соседние
+                 кадры приглушены — даёт глубину и подсказывает «листай». --}}
+            <div class="sm:hidden">
+                <div class="-mx-5">
+                    <div x-ref="slider" @scroll.passive="syncSlide($el)"
+                         class="flex gap-3 overflow-x-auto snap-x snap-mandatory scroll-px-5 px-5 pb-1 hide-scrollbar">
+                        @foreach($gallery as $i => $item)
+                            <button type="button" @click="openAt({{ $i }})"
+                                    :class="slide === {{ $i }} ? 'opacity-100' : 'opacity-45'"
+                                    class="group relative shrink-0 w-[84vw] max-w-[22rem] aspect-[4/5] snap-center overflow-hidden rounded-md bg-black ring-1 ring-ink-700 transition-opacity duration-500">
+                                {{-- размытая подложка из того же кадра — заполняет поля без обрезки --}}
+                                <img src="{{ asset('storage/'.$item->image) }}" alt="" aria-hidden="true" loading="lazy"
+                                     class="absolute inset-0 w-full h-full object-cover scale-125 blur-2xl opacity-50">
+                                {{-- сам кадр целиком --}}
+                                <img src="{{ asset('storage/'.$item->image) }}" alt="{{ $item->title ?? '' }}" loading="lazy"
+                                     class="relative z-10 w-full h-full object-contain">
+                                @if($item->title)
+                                <div class="absolute inset-x-0 bottom-0 z-20 p-4 pt-12 text-left bg-gradient-to-t from-black/85 via-black/35 to-transparent">
+                                    <div class="font-display font-bold text-white text-[15px] leading-tight">{{ $item->title }}</div>
+                                </div>
+                                @endif
+                                <div class="absolute top-3 right-3 z-20 w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center shadow-lg shadow-black/30">
+                                    <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
+                                    </svg>
+                                </div>
+                            </button>
+                        @endforeach
+                    </div>
+                </div>
+
+                {{-- Панель управления: стрелки + точки (вынесены под слайдер, гарантированно кликабельны) --}}
+                <div class="mt-7 flex items-center justify-center gap-5" x-show="items.length > 1">
+                    <button type="button" @click="slidePrev()" :disabled="slide === 0" aria-label="Предыдущее фото"
+                            class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border border-ink-600 text-ink-200 transition enabled:hover:border-primary-500 enabled:hover:text-primary-500 enabled:active:scale-90 disabled:opacity-30">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+                    </button>
+
+                    <div class="flex items-center gap-2">
+                        @foreach($gallery as $i => $item)
+                            <button type="button" @click="goTo({{ $i }})" aria-label="Фото {{ $i + 1 }}"
+                                    class="h-1.5 rounded-full transition-all duration-300"
+                                    :class="slide === {{ $i }} ? 'w-7 bg-primary-500' : 'w-1.5 bg-ink-600'"></button>
+                        @endforeach
+                    </div>
+
+                    <button type="button" @click="slideNext()" :disabled="slide === items.length - 1" aria-label="Следующее фото"
+                            class="shrink-0 w-11 h-11 flex items-center justify-center rounded-full border border-ink-600 text-ink-200 transition enabled:hover:border-primary-500 enabled:hover:text-primary-500 enabled:active:scale-90 disabled:opacity-30">
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                    </button>
+                </div>
+            </div>
+
+            {{-- Бенто-сетка (с sm) --}}
+            <div class="hidden sm:grid sm:grid-cols-12 sm:auto-rows-[200px] lg:auto-rows-[240px] gap-3 lg:gap-4">
                 @foreach($gallery as $i => $item)
                     @php
-                        // На мобильном — единые квадратные плитки в 2 колонки (мягкий, ровный кроп);
-                        // бенто-раскладка с разными размерами включается с sm.
                         $spanClass = match($item->size) {
                             \App\Models\GalleryItem::SIZE_WIDE => 'sm:col-span-8 sm:row-span-1',
                             \App\Models\GalleryItem::SIZE_TALL => 'sm:col-span-4 sm:row-span-2',
@@ -489,19 +563,19 @@
                         };
                     @endphp
                     <button type="button" @click="openAt({{ $i }})"
-                            class="group relative overflow-hidden rounded-none bg-ink-800 aspect-square sm:aspect-auto {{ $spanClass }}">
+                            class="group relative overflow-hidden rounded-sm bg-ink-950 ring-1 ring-ink-700 {{ $spanClass }}">
                         <img src="{{ asset('storage/'.$item->image) }}" alt="{{ $item->title ?? '' }}" loading="lazy"
-                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-                        <div class="absolute inset-0 bg-gradient-to-t from-ink-900/80 via-ink-900/0 to-ink-900/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div class="absolute inset-0 p-5 flex flex-col justify-end">
+                             class="absolute inset-0 w-full h-full object-cover transition-transform duration-[800ms] ease-[cubic-bezier(.16,1,.3,1)] group-hover:scale-105">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                        <div class="absolute inset-x-0 bottom-0 p-5 flex flex-col justify-end">
                             @if($item->title)
-                            <div class="font-display font-bold text-ink-100 text-[15px] lg:text-[18px] leading-tight opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all duration-300">
+                            <div class="font-display font-bold text-white text-[15px] lg:text-[18px] leading-tight opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-500">
                                 {{ $item->title }}
                             </div>
                             @endif
                         </div>
-                        <div class="absolute top-3 right-3 w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all scale-90 group-hover:scale-100 shadow-lg">
-                            <svg class="w-4 h-4 text-ink-100" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <div class="absolute top-3 right-3 w-9 h-9 bg-primary-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 scale-90 group-hover:scale-100 shadow-lg shadow-black/30">
+                            <svg class="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z"/>
                             </svg>
                         </div>
@@ -509,39 +583,53 @@
                 @endforeach
             </div>
 
-            {{-- Лайтбокс --}}
-            <div x-show="open" x-cloak x-transition.opacity.duration.300ms
-                 class="fixed inset-0 z-[100] bg-black/90 backdrop-blur-sm flex items-center justify-center select-none">
+            {{-- ── Лайтбокс ─────────────────────────────────────────────────
+                 Закрытие — кликом по фону (@click.self): стрелки и фото —
+                 прямые потомки фона, поэтому тап по ним закрытие НЕ вызывает
+                 (раньше @click.outside на внутреннем блоке гасил окно при
+                 нажатии стрелки). Текст белый — фон чёрный. --}}
+            <div x-show="open" x-cloak @click.self="close()"
+                 x-transition:enter="transition ease-out duration-300"
+                 x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+                 x-transition:leave="transition ease-in duration-200"
+                 x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+                 class="fixed inset-0 z-[100] bg-black/92 backdrop-blur-sm flex items-center justify-center select-none">
 
-                <button type="button" @click="close()"
-                        class="absolute top-4 right-4 lg:top-6 lg:right-6 w-12 h-12 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10">
+                <button type="button" @click="close()" aria-label="Закрыть"
+                        class="absolute top-4 right-4 lg:top-6 lg:right-6 z-20 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 rounded-full transition-colors">
                     <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
                 </button>
 
-                <button type="button" @click="prev()" x-show="items.length > 1"
-                        class="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10">
+                <button type="button" @click="prev()" x-show="items.length > 1" aria-label="Предыдущее фото"
+                        class="absolute left-2 sm:left-4 lg:left-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 rounded-full transition">
                     <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 12H5m0 0l6 6m-6-6l6-6"/></svg>
                 </button>
 
-                <button type="button" @click="next()" x-show="items.length > 1"
-                        class="absolute right-2 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 w-12 h-12 flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 rounded-full transition-colors z-10">
+                <button type="button" @click="next()" x-show="items.length > 1" aria-label="Следующее фото"
+                        class="absolute right-2 sm:right-4 lg:right-8 top-1/2 -translate-y-1/2 z-20 w-12 h-12 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 active:scale-90 rounded-full transition">
                     <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 12h14m0 0l-6-6m6 6l-6 6"/></svg>
                 </button>
 
-                <div class="relative flex flex-col items-center max-w-[92vw] max-h-[92vh]" @click.outside="close()">
-                    <template x-for="(item, idx) in items" :key="item.id">
-                        <img x-show="idx === current" :src="item.url" :alt="item.title || ''"
-                             class="max-w-[92vw] max-h-[78vh] object-contain rounded-none">
-                    </template>
+                <div class="relative z-10 flex flex-col items-center max-w-[92vw] max-h-[92vh]">
+                    <div class="relative flex items-center justify-center">
+                        <template x-for="(item, idx) in items" :key="item.id">
+                            <img x-show="idx === current"
+                                 x-transition:enter="transition ease-out duration-300"
+                                 x-transition:enter-start="opacity-0 scale-[0.97]"
+                                 x-transition:enter-end="opacity-100 scale-100"
+                                 :src="item.url" :alt="item.title || ''"
+                                 class="max-w-[92vw] max-h-[78vh] object-contain shadow-2xl shadow-black/50">
+                        </template>
+                    </div>
 
                     <div class="mt-5 lg:mt-6 text-center max-w-2xl px-4">
-                        <div class="font-mono text-[11px] text-ink-100/40 num-tabular tracking-widest mb-2">
+                        <div class="font-mono text-[11px] text-white/40 num-tabular tracking-widest mb-2">
                             <span x-text="String(current + 1).padStart(2,'0')"></span> / <span x-text="String(items.length).padStart(2,'0')"></span>
                         </div>
                         <div x-show="items[current]?.title" x-text="items[current]?.title"
-                             class="font-display font-bold text-ink-100 text-lg lg:text-2xl tracking-tight mb-2"></div>
+                             class="font-display font-bold text-white text-lg lg:text-2xl tracking-tight mb-2"></div>
                         <div x-show="items[current]?.caption" x-text="items[current]?.caption"
-                             class="text-ink-100/60 text-[14px] leading-relaxed"></div>
+                             class="text-white/65 text-[14px] leading-relaxed"></div>
                     </div>
                 </div>
             </div>
@@ -757,10 +845,10 @@
                             <span class="text-[13px] sm:text-[14px] uppercase tracking-wider">Записаться онлайн</span>
                             <svg class="w-5 h-5 shrink-0 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                         </a>
-                        <a href="tel:+78000000000"
+                        <a href="tel:+79616913023"
                            class="group inline-flex items-center justify-between gap-3 sm:gap-6 px-5 sm:px-7 py-4 sm:py-5 bg-black/[0.03] hover:bg-black/[0.06] border border-ink-700 text-ink-100 rounded-none font-bold transition-colors">
                             <span class="text-[13px] sm:text-[14px] uppercase tracking-wider">Позвонить</span>
-                            <span class="font-mono text-[13px] sm:text-[14px] text-primary-400 whitespace-nowrap">+7 800 000 00 00</span>
+                            <span class="font-mono text-[13px] sm:text-[14px] text-primary-400 whitespace-nowrap">+7 961 691-30-23</span>
                         </a>
                     </div>
                 </div>

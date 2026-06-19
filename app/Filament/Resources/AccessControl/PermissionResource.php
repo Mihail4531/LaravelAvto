@@ -3,16 +3,10 @@
 namespace App\Filament\Resources\AccessControl;
 
 use Althinect\FilamentSpatieRolesPermissions\Resources\PermissionResource as BasePermissionResource;
-use App\Filament\Resources\AccessControl\PermissionResource\Pages\CreatePermission;
-use App\Filament\Resources\AccessControl\PermissionResource\Pages\EditPermission;
 use App\Filament\Resources\AccessControl\PermissionResource\Pages\ListPermissions;
 use App\Filament\Resources\AccessControl\PermissionResource\Pages\ViewPermission;
 use App\Models\User;
 use App\Support\AccessLabels;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\CreateAction;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\EditAction;
 use Filament\Actions\ViewAction;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -56,24 +50,28 @@ class PermissionResource extends BasePermissionResource
         return static::isSuperAdmin();
     }
 
+    // Раздел — справочник уровня кода: разрешения заводятся в коде (сидер
+    // RolesAndPermissionsSeeder) и обретают смысл только там, где код их
+    // проверяет (->can(...)). Создавать/менять их вручную бессмысленно —
+    // поэтому только просмотр, даже для super_admin.
     public static function canCreate(): bool
     {
-        return static::isSuperAdmin();
+        return false;
     }
 
     public static function canEdit(Model $record): bool
     {
-        return static::isSuperAdmin();
+        return false;
     }
 
     public static function canDelete(Model $record): bool
     {
-        return static::isSuperAdmin();
+        return false;
     }
 
     public static function canDeleteAny(): bool
     {
-        return static::isSuperAdmin();
+        return false;
     }
 
     public static function shouldRegisterNavigation(): bool
@@ -104,31 +102,15 @@ class PermissionResource extends BasePermissionResource
                     ->options(config('filament-spatie-roles-permissions.guard_names')),
             ])
             ->actions([
-                EditAction::make(),
                 ViewAction::make(),
-            ])
-            ->bulkActions([
-                BulkActionGroup::make([
-                    DeleteBulkAction::make(),
-                ]),
-            ])
-            ->emptyStateActions([
-                CreateAction::make(),
             ]);
     }
 
     public static function getPages(): array
     {
-        if (config('filament-spatie-roles-permissions.should_use_simple_modal_resource.permissions')) {
-            return [
-                'index' => ListPermissions::route('/'),
-            ];
-        }
-
+        // Только просмотр: создание/редактирование убраны (справочник уровня кода).
         return [
             'index' => ListPermissions::route('/'),
-            'create' => CreatePermission::route('/create'),
-            'edit' => EditPermission::route('/{record}/edit'),
             'view' => ViewPermission::route('/{record}'),
         ];
     }

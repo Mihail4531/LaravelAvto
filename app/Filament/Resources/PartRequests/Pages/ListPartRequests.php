@@ -13,7 +13,8 @@ class ListPartRequests extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            CreateAction::make()->label('Запросить запчасть')
+            CreateAction::make()->label('Выдать запчасть')
+                ->icon('heroicon-o-arrow-up-tray')
                 ->visible(fn () => PartRequestResource::canCreate()),
         ];
     }

@@ -201,17 +201,29 @@ class OrderForm
                             ->schema([
                                 Select::make('receiver_id')
                                     ->label('Приёмщик')
-                                    ->options(
-                                        User::where('active', true)
+                                    ->options(function ($record) {
+                                        $users = User::where('active', true)
                                             ->permission('create_order')
                                             ->withoutSuperAdmin()
                                             ->with('position')
                                             ->orderBy('name')
-                                            ->get()
-                                            ->mapWithKeys(fn (User $u) => [
-                                                $u->id => $u->name.($u->position ? ' — '.$u->position->name : ''),
-                                            ])
-                                    )
+                                            ->get();
+
+                                        // Текущий приёмщик заказа (или тот, кто сейчас
+                                        // оформляет) всегда должен быть в списке — иначе
+                                        // при техническом/уволенном/вне-выборки пользователе
+                                        // поле показало бы голый ID вместо имени.
+                                        $currentId = $record?->receiver_id ?? Auth::id();
+                                        if ($currentId && ! $users->contains('id', $currentId)) {
+                                            if ($current = User::with('position')->find($currentId)) {
+                                                $users->push($current);
+                                            }
+                                        }
+
+                                        return $users->mapWithKeys(fn (User $u) => [
+                                            $u->id => $u->name.($u->position ? ' — '.$u->position->name : ''),
+                                        ]);
+                                    })
                                     ->default(Auth::id())
                                     ->searchable()
                                     ->required()

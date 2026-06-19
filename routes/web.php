@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Route;
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/booking', [HomeController::class, 'booking'])->name('booking');
 
-// ─── Личный кабинет клиента ─────────────────────────────────────────────
+// ─── История обслуживания клиента ───────────────────────────────────────
 // Публичные роуты, защищены OTP-кодом на email.
 Route::prefix('my-visits')->name('lookup.')->group(function () {
     Route::get('/', [ClientLookupController::class, 'showForm'])->name('form');

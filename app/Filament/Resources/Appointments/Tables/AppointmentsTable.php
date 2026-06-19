@@ -51,15 +51,9 @@ class AppointmentsTable
                 TextColumn::make('status')
                     ->label('Статус')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'new' => 'info',
-                        'confirmed' => 'warning',
-                        'rejected' => 'danger',
-                        'converted' => 'success',
-                        'cancelled' => 'secondary',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn ($state) => Appointment::statuses()[$state] ?? $state),
+                    ->formatStateUsing(fn ($state) => Appointment::statuses()[$state] ?? $state)
+                    ->color(fn ($state) => Appointment::statusColor($state))
+                    ->icon(fn ($state) => Appointment::statusIcon($state)),
                 TextColumn::make('processedBy.name')
                     ->label('Обработал')
                     ->toggleable(isToggledHiddenByDefault: true),

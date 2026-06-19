@@ -67,17 +67,16 @@ class PartRequestForm
                     ->content(fn (callable $get) => static::stockNote($get('part_id'), $get('quantity'))),
 
                 Textarea::make('comment')
-                    ->label('Комментарий для кладовщика')
+                    ->label('Комментарий')
                     ->rows(2)
                     ->nullable()
-                    ->placeholder('Например: нужно срочно, авто на подъёмнике'),
+                    ->placeholder('Например: для какой работы'),
             ]);
     }
 
     /**
-     * Мягкая подсказка по наличию при заявке (не блокирует — заявка может
-     * превышать остаток как сигнал кладовщику дозаказать). Жёсткая проверка —
-     * при выдаче в PartRequest::fulfill().
+     * Подсказка по наличию. Выдать больше, чем свободно на складе, нельзя —
+     * жёсткая проверка в PartRequest::fulfill() при создании выдачи.
      */
     public static function stockNote($partId, $quantity): string|HtmlString
     {
@@ -94,7 +93,7 @@ class PartRequestForm
         $qty = (float) ($quantity ?: 0);
 
         if ($qty > $avail) {
-            return new HtmlString('<span style="color:#F59E0B;font-size:13px;font-weight:600;">⚠ Запрошено '.$qty.', а свободно '.$avail.' '.$part->unit.'. Заявку можно создать, но кладовщику нужно будет дозаказать.</span>');
+            return new HtmlString('<span style="color:#F59E0B;font-size:13px;font-weight:600;">⚠ Запрошено '.$qty.', а свободно только '.$avail.' '.$part->unit.'. Выдать столько нельзя — уменьшите количество или оприходуйте поступление.</span>');
         }
 
         return new HtmlString('<span style="color:#10B981;font-size:13px;font-weight:600;">✓ В наличии достаточно (свободно '.$avail.' '.$part->unit.')</span>');

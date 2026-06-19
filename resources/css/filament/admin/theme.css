@@ -352,6 +352,52 @@ html:not(.dark) .fi-ta-header {
 }
 
 /* ════════════════════════════════════════════════════════════════════
+   АДАПТИВ ЭКРАНА ВХОДА (≤640px) — на телефоне карточка/форма были слишком
+   крупными и высокими. Сжимаем воздух: меньше внешних и внутренних
+   отступов, плотнее промежутки в форме, мельче логотип/заголовки. Поля и
+   кнопка сохраняют тач-комфортную высоту.
+═══════════════════════════════════════════════════════════════════════ */
+@media (max-width: 640px) {
+    /* Карточка прижимается к краям с небольшими полями, без лишней высоты */
+    .fi-simple-layout .fi-simple-main-ctn {
+        padding-top: 1.25rem !important;
+        padding-bottom: 1.25rem !important;
+        padding-inline: 1rem !important;
+    }
+
+    /* Компактные внутренние отступы карточки и меньший радиус */
+    .fi-simple-layout .fi-simple-main {
+        padding: 1.5rem 1.25rem !important;
+        border-radius: 14px !important;
+    }
+
+    /* Меньше вертикального промежутка между шапкой и формой */
+    .fi-simple-layout .fi-simple-main,
+    .fi-simple-layout .fi-simple-page {
+        gap: 1.25rem !important;
+        row-gap: 1.25rem !important;
+    }
+
+    /* Плотнее промежутки между полями формы */
+    .fi-simple-layout .fi-form {
+        gap: 1rem !important;
+        row-gap: 1rem !important;
+    }
+
+    /* Заголовочный блок: ближе строки, мельче кегль */
+    .fi-simple-layout .fi-simple-header {
+        gap: 0.4rem !important;
+        row-gap: 0.4rem !important;
+    }
+    .fi-simple-layout .fi-logo {
+        font-size: 1.15rem !important;
+    }
+    .fi-simple-layout .fi-simple-header-heading {
+        font-size: 0.85rem !important;
+    }
+}
+
+/* ════════════════════════════════════════════════════════════════════
    КОЛОКОЛЬЧИК УВЕДОМЛЕНИЙ — пока есть непрочитанные, делаем его заметным:
    красный пульсирующий счётчик + периодическое «покачивание» колокольчика,
    и подсветка непрочитанных записей в самом списке. Работает в обеих темах.
@@ -402,3 +448,111 @@ html:not(.dark) .fi-ta-header {
         animation: none !important;
     }
 }
+
+/* ════════════════════════════════════════════════════════════════════
+   ПОЛИРОВКА ИНТЕРФЕЙСА ПАНЕЛИ — заголовки, статусы, таблицы, карточки.
+   Только форма и типографика: семантические цвета Filament (success/
+   warning/danger и т.д.) не переопределяем. Работает в обеих темах.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* ── Заголовок страницы ───────────────────────────────────────────────
+   Плотнее трекинг и увереннее вес — заголовок читается как «титул». */
+.fi-header-heading {
+    font-weight: 700 !important;
+    letter-spacing: -0.02em;
+}
+.fi-header-subheading {
+    letter-spacing: 0.005em;
+}
+
+/* ── Заголовки секций ─────────────────────────────────────────────── */
+.fi-section-header-heading {
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+}
+
+/* ── Статусы (бейджи) ─────────────────────────────────────────────────
+   Делаем «таблетку» с мягким контуром в собственном цвете статуса
+   (currentColor = цвет текста бейджа, заданный цветовой системой). Цифры —
+   моноширинные, чтобы счётчики и суммы не «плясали». */
+.fi-badge {
+    border-radius: 9999px !important;
+    font-weight: 600 !important;
+    letter-spacing: 0.01em;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 22%, transparent);
+}
+.fi-badge .fi-badge-label {
+    font-variant-numeric: tabular-nums;
+}
+
+/* ── Заголовки колонок таблиц ─────────────────────────────────────────
+   Аккуратные «микро-капсы»: компактнее, в разрядку — техничный, чистый
+   вид шапки данных. Цвет/сортировку оставляем стандартными Filament. */
+.fi-ta-header-cell {
+    text-transform: uppercase;
+    letter-spacing: 0.045em;
+}
+.fi-ta-header-cell,
+.fi-ta-header-cell-label {
+    font-size: 0.7rem !important;
+    font-weight: 600 !important;
+}
+
+/* ── Карточки сводки (StatsOverview) ──────────────────────────────────
+   Лёгкий подъём при наведении (карточки кликабельны) и более «весомое»
+   число с моноширинными цифрами. */
+.fi-wi-stats-overview-stat {
+    transition:
+        transform 0.25s cubic-bezier(0.16, 1, 0.3, 1),
+        box-shadow 0.25s ease,
+        border-color 0.25s ease;
+}
+.fi-wi-stats-overview-stat:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 36px -20px rgba(2, 6, 23, 0.3);
+}
+.dark .fi-wi-stats-overview-stat:hover {
+    box-shadow: 0 18px 36px -18px rgba(0, 0, 0, 0.6);
+    border-color: rgba(255, 255, 255, 0.14);
+}
+.fi-wi-stats-overview-stat-value {
+    font-weight: 800 !important;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+}
+.fi-wi-stats-overview-stat-label {
+    letter-spacing: 0.02em;
+}
+
+/* ── Секции-карточки: мягкая тень в светлой теме для глубины слоёв ───── */
+html:not(.dark) .fi-section {
+    box-shadow:
+        0 1px 2px rgba(2, 6, 23, 0.04),
+        0 4px 12px -6px rgba(2, 6, 23, 0.06);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .fi-wi-stats-overview-stat { transition: none !important; }
+    .fi-wi-stats-overview-stat:hover { transform: none !important; }
+}
+
+/* ════════════════════════════════════════════════════════════════════
+   ТАБЛИЦЫ — зебра + акцентные строки. Зебра помогает вести взгляд по
+   строке; акцентная полоса слева мгновенно выделяет проблемные записи:
+   просроченные наряды (.ais-row-overdue) и дефицит склада (.ais-row-low).
+   Классы навешиваются через ->recordClasses() в соответствующих таблицах.
+═══════════════════════════════════════════════════════════════════════ */
+
+/* Зебра (не !important — акценты и hover её перекрывают) */
+html:not(.dark) .fi-ta-row:nth-of-type(even) td { background-color: rgba(2, 6, 23, 0.025); }
+.dark .fi-ta-row:nth-of-type(even) td { background-color: rgba(255, 255, 255, 0.02); }
+
+/* Просроченные открытые наряды — розовая полоса + лёгкая заливка */
+.fi-ta-row.ais-row-overdue td { background-color: rgba(244, 63, 94, 0.06) !important; }
+.dark .fi-ta-row.ais-row-overdue td { background-color: rgba(244, 63, 94, 0.12) !important; }
+.fi-ta-row.ais-row-overdue td:first-child { box-shadow: inset 4px 0 0 0 #f43f5e; }
+
+/* Дефицит склада — янтарная полоса + лёгкая заливка */
+.fi-ta-row.ais-row-low td { background-color: rgba(245, 158, 11, 0.07) !important; }
+.dark .fi-ta-row.ais-row-low td { background-color: rgba(245, 158, 11, 0.13) !important; }
+.fi-ta-row.ais-row-low td:first-child { box-shadow: inset 4px 0 0 0 #f59e0b; }

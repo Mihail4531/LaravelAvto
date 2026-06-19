@@ -2,14 +2,18 @@
 
 namespace App\Filament\Resources\Parts\Tables;
 
+use App\Models\Part;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Notifications\Notification;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Collection;
 
 class PartsTable
 {
@@ -39,11 +43,6 @@ class PartsTable
 
                 TextColumn::make('stock_quantity')
                     ->label('На складе')
-                    ->numeric()
-                    ->sortable(),
-
-                TextColumn::make('reserved_quantity')
-                    ->label('Резерв')
                     ->numeric()
                     ->sortable(),
 
@@ -85,6 +84,10 @@ class PartsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('name')
+            // Дефицитные позиции — акцентная полоса слева (CSS .ais-row-low)
+            ->recordClasses(fn (Part $record): ?string => $record->min_stock_quantity > 0 && $record->isLowStock()
+                ? 'ais-row-low'
+                : null)
             ->filters([
                 TernaryFilter::make('active')
                     ->label('Активные')
@@ -103,10 +106,42 @@ class PartsTable
             ->recordActions([
                 EditAction::make()->label('Редактировать')
                     ->visible(fn () => auth()->user()?->can('update_part')),
+
+                DeleteAction::make()
+                    ->label('Удалить')
+                    ->visible(fn () => auth()->user()?->can('delete_part'))
+                    // Нельзя удалить запчасть с историей — блокируем с подсказкой.
+                    ->before(function (Part $record, DeleteAction $action) {
+                        if (! $record->isDeletable()) {
+                            Notification::make()
+                                ->title('Нельзя удалить запчасть')
+                                ->body('«'.$record->name.'» уже использовалась в заказах или есть движения по складу. Снимите флажок «Активна», чтобы убрать её из выбора, — история при этом сохранится.')
+                                ->danger()
+                                ->send();
+
+                            $action->halt();
+                        }
+                    }),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
-                    DeleteBulkAction::make()->label('Удалить выбранные'),
+                    DeleteBulkAction::make()
+                        ->label('Удалить выбранные')
+                        // Если среди выбранных есть «используемые» — отменяем удаление
+                        // целиком с перечнем, чтобы не оставить полудело.
+                        ->before(function (Collection $records, DeleteBulkAction $action) {
+                            $blocked = $records->filter(fn (Part $p) => ! $p->isDeletable());
+
+                            if ($blocked->isNotEmpty()) {
+                                Notification::make()
+                                    ->title('Часть запчастей удалить нельзя')
+                                    ->body('Используются в заказах или движениях склада: '.$blocked->pluck('name')->implode(', ').'. Сделайте их неактивными вместо удаления.')
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        }),
                 ])->visible(fn () => auth()->user()?->can('delete_part')),
             ]);
     }

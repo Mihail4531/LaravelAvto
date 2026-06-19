@@ -12,7 +12,7 @@ class Car extends Model
 
     protected $fillable = [
         'client_id', 'car_brand_id', 'car_model_id',
-        'vin', 'license_plate', 'year', 'mileage', 'color',
+        'vin', 'body_number', 'engine_number', 'license_plate', 'year', 'mileage', 'color',
         'fuel_type', 'engine_volume', 'power', 'transmission', 'body_type',
     ];
 

@@ -93,4 +93,16 @@ class Part extends Model
     {
         return $this->min_stock_quantity > 0 && $this->available_quantity <= $this->min_stock_quantity;
     }
+
+    /**
+     * Можно ли физически удалить запчасть. Нельзя, если она уже использовалась —
+     * привязана к заказ-нарядам или есть движения по складу: это историю и
+     * биллинг нарядов сломало бы (FK order_part.part_id = RESTRICT). Такие
+     * позиции выводят из оборота флагом «Активна», а не удаляют.
+     */
+    public function isDeletable(): bool
+    {
+        return ! $this->orders()->exists()
+            && ! $this->movements()->exists();
+    }
 }

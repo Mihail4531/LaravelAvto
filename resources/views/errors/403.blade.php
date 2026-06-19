@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>403 — Доступ запрещён · АвтоСервис</title>
+    <title>403 — Доступ запрещён · Mobile 1</title>
     <meta name="robots" content="noindex">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">

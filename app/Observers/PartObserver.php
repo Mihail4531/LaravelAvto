@@ -7,13 +7,15 @@ use App\Models\Part;
 use App\Models\User;
 use Filament\Actions\Action;
 use Filament\Notifications\Notification;
+use Illuminate\Database\Eloquent\Collection;
 
 class PartObserver
 {
     /**
-     * При изменении остатков (выдача, списание, продажа) проверяем,
-     * не опустился ли доступный остаток до минимума. Уведомление шлём
-     * только в момент ПЕРЕСЕЧЕНИЯ порога — чтобы не спамить повторно.
+     * При изменении остатков (выдача, списание, продажа) шлём уведомление
+     * только в момент ПЕРЕСЕЧЕНИЯ порога — чтобы не спамить повторно:
+     *   1) запчасть закончилась (доступно < 1) — приоритетно, шлём всегда;
+     *   2) низкий остаток (доступно ≤ минимума) — если контроль минимума включён.
      */
     public function updated(Part $part): void
     {
@@ -21,34 +23,41 @@ class PartObserver
             return;
         }
 
+        // Доступный остаток ДО изменения и ПОСЛЕ
+        $oldStock = (float) $part->getOriginal('stock_quantity');
+        $oldReserved = (float) $part->getOriginal('reserved_quantity');
+        $oldAvailable = max(0, $oldStock - $oldReserved);
+        $newAvailable = (float) $part->available_quantity;
+
+        $recipients = $this->recipients();
+        if ($recipients->isEmpty()) {
+            return;
+        }
+
+        // 1) Закончилась совсем — пересечение «было ≥ 1, стало < 1». Шлём
+        //    независимо от настройки минимума и не дублируем low-stock.
+        if ($oldAvailable >= 1 && $newAvailable < 1) {
+            Notification::make()
+                ->title('Запчасть закончилась')
+                ->icon('heroicon-o-x-circle')
+                ->iconColor('danger')
+                ->body(sprintf('«%s»: на складе не осталось. Требуется срочное пополнение.', $part->name))
+                ->actions([$this->openAction($part)])
+                ->sendToDatabase($recipients);
+
+            return;
+        }
+
+        // 2) Низкий остаток — пересечение порога минимума
         $min = (float) $part->min_stock_quantity;
         if ($min <= 0) {
             return; // контроль минимума выключен для этой позиции
         }
 
-        // Доступный остаток ДО изменения
-        $oldStock = (float) $part->getOriginal('stock_quantity');
-        $oldReserved = (float) $part->getOriginal('reserved_quantity');
-        $oldAvailable = max(0, $oldStock - $oldReserved);
-
-        $newAvailable = (float) $part->available_quantity;
-
         $wasLow = $oldAvailable <= $min;
         $isLow = $newAvailable <= $min;
-
-        // Уведомляем только при переходе из «нормы» в «дефицит»
         if ($wasLow || ! $isLow) {
-            return;
-        }
-
-        // Уведомляем только тех, кто может пополнить склад
-        // (кладовщик, управляющий, супер-админ), а не всех кто видит запчасти.
-        $recipients = User::where('active', true)
-            ->get()
-            ->filter(fn (User $user) => $user->can('receive_part'));
-
-        if ($recipients->isEmpty()) {
-            return;
+            return; // уведомляем только при переходе из «нормы» в «дефицит»
         }
 
         Notification::make()
@@ -58,15 +67,31 @@ class PartObserver
             ->body(sprintf(
                 '«%s»: доступно %s, минимум %s. Требуется пополнение.',
                 $part->name,
-                rtrim(rtrim(number_format($newAvailable, 2, '.', ' '), '0'), '.'),
-                rtrim(rtrim(number_format($min, 2, '.', ' '), '0'), '.'),
+                $this->num($newAvailable),
+                $this->num($min),
             ))
-            ->actions([
-                Action::make('open')
-                    ->label('Открыть запчасть')
-                    ->url(PartResource::getUrl('edit', ['record' => $part->id]))
-                    ->markAsRead(),
-            ])
+            ->actions([$this->openAction($part)])
             ->sendToDatabase($recipients);
+    }
+
+    /** Кто может пополнять склад (кладовщик, управляющий, супер-админ). */
+    private function recipients(): Collection
+    {
+        return User::where('active', true)
+            ->get()
+            ->filter(fn (User $user) => $user->can('receive_part'));
+    }
+
+    private function openAction(Part $part): Action
+    {
+        return Action::make('open')
+            ->label('Открыть запчасть')
+            ->url(PartResource::getUrl('edit', ['record' => $part->id]))
+            ->markAsRead();
+    }
+
+    private function num(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ' '), '0'), '.');
     }
 }

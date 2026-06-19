@@ -61,13 +61,6 @@ class PartForm
                             ->minValue(0)
                             ->default(0),
 
-                        TextInput::make('reserved_quantity')
-                            ->label('Зарезервировано')
-                            ->numeric()
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->helperText('Управляется автоматически через заказы'),
-
                         TextInput::make('min_stock_quantity')
                             ->label('Минимальный остаток')
                             ->numeric()

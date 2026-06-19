@@ -111,6 +111,23 @@
         .dark .profile-field-label { color: rgb(156 163 175); }
         .profile-field-value { font-size: 15px; font-weight: 600; color: rgb(17 24 39); }
         .dark .profile-field-value { color: #fff; }
+
+        /* ── Мобильный адаптив (≤640px): шапка в столбик, аватар компактнее ── */
+        @media (max-width: 640px) {
+            .profile-hero {
+                flex-direction: column;
+                text-align: center;
+                gap: 1rem;
+                padding: 1.25rem;
+            }
+            .profile-avatar, .profile-avatar-fallback {
+                width: 76px;
+                height: 76px;
+                font-size: 28px;
+            }
+            .profile-badges { justify-content: center; }
+            .profile-name { font-size: 20px; }
+        }
     </style>
 
     {{-- ═════ Шапка профиля ═════ --}}

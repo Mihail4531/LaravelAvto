@@ -15,6 +15,7 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\DB;
 
 class ViewOrder extends ViewRecord
 {
@@ -23,16 +24,16 @@ class ViewOrder extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
-            // Механик запрашивает запчасть прямо из своего заказа
+            // Выдача запчасти прямо из заказа (списывается сразу)
             Action::make('requestPart')
-                ->label('Запросить запчасть')
-                ->icon('heroicon-o-inbox-arrow-down')
+                ->label('Выдать запчасть')
+                ->icon('heroicon-o-arrow-up-tray')
                 ->color('primary')
-                // Только для активных нарядов: на завершённый/закрытый/отменённый запчасти не запрашивают
+                // Только для активных нарядов: на завершённый/закрытый/отменённый запчасти не выдают
                 ->visible(fn () => auth()->user()?->can('create_part_request')
                     && in_array($this->record->status, [Order::STATUS_NEW, Order::STATUS_IN_PROGRESS], true))
-                ->modalHeading('Запрос запчасти у склада')
-                ->modalSubmitActionLabel('Отправить кладовщику')
+                ->modalHeading('Выдача запчасти на заказ')
+                ->modalSubmitActionLabel('Выдать')
                 ->schema([
                     Select::make('part_id')
                         ->label('Запчасть / материал')
@@ -60,24 +61,35 @@ class ViewOrder extends ViewRecord
                         ->content(fn (callable $get) => PartRequestForm::stockNote($get('part_id'), $get('quantity'))),
 
                     Textarea::make('comment')
-                        ->label('Комментарий для кладовщика')
+                        ->label('Комментарий')
                         ->rows(2)
                         ->nullable(),
                 ])
                 ->action(function (array $data) {
-                    PartRequest::create([
-                        'order_id' => $this->record->id,
-                        'part_id' => $data['part_id'],
-                        'mechanic_id' => auth()->id(),
-                        'quantity' => $data['quantity'],
-                        'status' => PartRequest::STATUS_PENDING,
-                        'comment' => $data['comment'] ?? null,
-                    ]);
+                    try {
+                        DB::transaction(function () use ($data) {
+                            $record = PartRequest::create([
+                                'order_id' => $this->record->id,
+                                'part_id' => $data['part_id'],
+                                'mechanic_id' => auth()->id(),
+                                'quantity' => $data['quantity'],
+                                'status' => PartRequest::STATUS_PENDING,
+                                'comment' => $data['comment'] ?? null,
+                            ]);
+                            $record->fulfill(auth()->id());
+                        });
 
-                    Notification::make()
-                        ->title('Заявка на запчасть отправлена кладовщику')
-                        ->success()
-                        ->send();
+                        Notification::make()
+                            ->title('Запчасть выдана и добавлена в заказ')
+                            ->success()
+                            ->send();
+                    } catch (\RuntimeException $e) {
+                        Notification::make()
+                            ->title('Не удалось выдать')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                    }
                 }),
 
             // Печать заказ-наряда — клиент получает его на руки

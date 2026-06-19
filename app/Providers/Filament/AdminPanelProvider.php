@@ -52,12 +52,14 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->font('Inter')
             ->brandLogo(asset('storage/logo/logoo.svg'))
-            ->favicon(asset('favicon.ico'))
+            ->favicon(asset('favicon.svg'))
 
             // ─── Тема ────────────────────────────────────────────────────
             ->darkMode(true)
+            // Primary = фирменный синий логотипа (#0066B3) — админка в одном
+            // тоне с публичным сайтом. Остальные роли — семантические статусы.
             ->colors([
-                'primary' => Color::Indigo,
+                'primary' => Color::hex('#0066B3'),
                 'gray' => Color::Slate,
                 'success' => Color::Emerald,
                 'warning' => Color::Amber,
@@ -194,7 +196,7 @@ class AdminPanelProvider extends PanelProvider
                             // Лимит повторов: не более REMIND_MAX напоминаний на одну
                             // «волну» непрочитанных, чтобы не превратить это в пытку.
                             // Сбрасывается при новом уведомлении и когда всё прочитано.
-                            var REMIND_EVERY = 60000, REMIND_MAX = 3, remindUsed = 0;
+                            var REMIND_EVERY = 60000, REMIND_MAX = 2, remindUsed = 0;
 
                             // Детектор НОВОГО уведомления — мгновенный «динь» + сброс лимита.
                             function check() {
@@ -236,6 +238,15 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::TOPBAR_LOGO_AFTER,
                 fn (): string => view('filament.top-navigation')->render(),
+            )
+
+            // На планшете/телефоне верхнее меню скрывается (переполняло топбар),
+            // а те же группы справочников показываем в нижней части БОКОВОГО
+            // меню (drawer по бургеру). Видимость переключается по ширине в
+            // самой вьюхе. Источник пунктов — тот же App\...\TopNavigation.
+            ->renderHook(
+                PanelsRenderHook::SIDEBAR_NAV_END,
+                fn (): string => view('filament.sidebar-navigation')->render(),
             )
 
             // ─── Группы навигации (порядок и иконки) ─────────────────────

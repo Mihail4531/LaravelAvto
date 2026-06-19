@@ -47,7 +47,7 @@ class PaymentsTable
                     }),
 
                 TextColumn::make('cashier.name')
-                    ->label('Кассир')
+                    ->label('Приёмщик')
                     ->sortable(),
 
                 TextColumn::make('paid_at')

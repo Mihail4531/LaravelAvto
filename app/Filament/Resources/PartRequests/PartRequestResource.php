@@ -23,29 +23,17 @@ class PartRequestResource extends Resource
 
     protected static ?string $model = PartRequest::class;
 
-    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-inbox-arrow-down';
+    protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-arrow-up-tray';
 
-    protected static ?string $navigationLabel = 'Запросы со склада';
+    protected static ?string $navigationLabel = 'Выдача запчастей';
 
-    protected static ?string $modelLabel = 'заявку на запчасть';
+    protected static ?string $modelLabel = 'выдачу запчасти';
 
-    protected static ?string $pluralModelLabel = 'Заявки на запчасти';
+    protected static ?string $pluralModelLabel = 'Выдача запчастей';
 
     protected static string|UnitEnum|null $navigationGroup = 'Склад';
 
     protected static ?int $navigationSort = 2;
-
-    public static function getNavigationBadge(): ?string
-    {
-        $count = static::getEloquentQuery()->where('status', PartRequest::STATUS_PENDING)->count();
-
-        return $count > 0 ? (string) $count : null;
-    }
-
-    public static function getNavigationBadgeColor(): ?string
-    {
-        return 'warning';
-    }
 
     public static function form(Schema $schema): Schema
     {
@@ -63,7 +51,7 @@ class PartRequestResource extends Resource
     }
 
     /**
-     * Механик видит только свои заявки. Кладовщик/директор/админ — все.
+     * Механик видит только свои выдачи. Остальные роли — все (в рамках филиала).
      */
     public static function getEloquentQuery(): Builder
     {

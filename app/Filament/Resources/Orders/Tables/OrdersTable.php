@@ -14,7 +14,6 @@ use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
@@ -50,16 +49,12 @@ class OrdersTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                BadgeColumn::make('status')
+                TextColumn::make('status')
                     ->label('Статус')
-                    ->colors([
-                        'gray' => 'new',
-                        'warning' => 'in_progress',
-                        'success' => 'completed',
-                        'primary' => 'closed',
-                        'danger' => 'cancelled',
-                    ])
-                    ->formatStateUsing(fn ($state) => Order::statuses()[$state] ?? $state),
+                    ->badge()
+                    ->formatStateUsing(fn ($state) => Order::statuses()[$state] ?? $state)
+                    ->color(fn ($state) => Order::statusColor($state))
+                    ->icon(fn ($state) => Order::statusIcon($state)),
 
                 TextColumn::make('total_amount')
                     ->label('Сумма (₽)')
@@ -91,6 +86,12 @@ class OrdersTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->defaultSort('created_at', 'desc')
+            // Просроченные открытые наряды — акцентная полоса слева (CSS .ais-row-overdue)
+            ->recordClasses(fn (Order $record): ?string => $record->isOpen()
+                && $record->planned_finish
+                && $record->planned_finish->isPast()
+                    ? 'ais-row-overdue'
+                    : null)
             ->filters([
                 SelectFilter::make('branch_id')
                     ->label('Филиал')

@@ -108,7 +108,21 @@ class AppointmentForm
 
                 Select::make('status')
                     ->label('Статус')
-                    ->options(Appointment::statuses())
+                    // «Преобразована в заказ» — системный статус: его выставляет
+                    // ТОЛЬКО кнопка «Преобразовать в заказ» (создаёт клиента, авто
+                    // и заказ-наряд). Вручную выбрать его нельзя — иначе заявка
+                    // выглядела бы преобразованной без реального заказа.
+                    ->options(function ($record) {
+                        $statuses = Appointment::statuses();
+
+                        if ($record?->status !== Appointment::STATUS_CONVERTED) {
+                            unset($statuses[Appointment::STATUS_CONVERTED]);
+                        }
+
+                        return $statuses;
+                    })
+                    // Уже преобразованную заявку «откатить» нельзя — статус заблокирован.
+                    ->disabled(fn ($record) => $record?->status === Appointment::STATUS_CONVERTED)
                     ->required(),
 
                 Textarea::make('reject_reason')

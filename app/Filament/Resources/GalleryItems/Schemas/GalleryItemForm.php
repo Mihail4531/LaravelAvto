@@ -2,9 +2,7 @@
 
 namespace App\Filament\Resources\GalleryItems\Schemas;
 
-use App\Models\GalleryItem;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -36,23 +34,6 @@ class GalleryItemForm
                     ->maxLength(500)
                     ->helperText('Появляется под фото в лайтбоксе.')
                     ->nullable(),
-
-                Select::make('size')
-                    ->label('Размер плитки')
-                    ->options([
-                        GalleryItem::SIZE_SMALL => 'Обычная (квадратная)',
-                        GalleryItem::SIZE_WIDE => 'Широкая (двойной ширины)',
-                        GalleryItem::SIZE_TALL => 'Высокая (портретная)',
-                    ])
-                    ->default(GalleryItem::SIZE_SMALL)
-                    ->required()
-                    ->helperText('Используется в сетке витрины для асимметрии.'),
-
-                TextInput::make('sort_order')
-                    ->label('Порядок сортировки')
-                    ->numeric()
-                    ->default(0)
-                    ->helperText('Чем меньше число, тем выше в галерее.'),
 
                 Toggle::make('active')
                     ->label('Показывать на сайте')

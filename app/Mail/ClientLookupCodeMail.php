@@ -19,7 +19,7 @@ class ClientLookupCodeMail extends Mailable
 
     public function envelope(): Envelope
     {
-        return new Envelope(subject: 'Код для входа в личный кабинет АвтоСервиса');
+        return new Envelope(subject: 'Код для доступа к истории обслуживания АвтоСервиса');
     }
 
     public function content(): Content
